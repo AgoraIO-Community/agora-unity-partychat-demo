@@ -281,7 +281,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         while (PhotonNetwork.room != null || PhotonNetwork.connected == false)
             yield return 0;
 
-        OnApplicationQuit();
+        TerminateAgoraEngine();
     }
 
     // Cleaning up the Agora engine during OnApplicationQuit() is an essential part of the Agora process with Unity. 
