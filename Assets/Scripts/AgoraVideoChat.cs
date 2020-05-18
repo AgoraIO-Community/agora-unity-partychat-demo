@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine; 
 using agora_gaming_rtc;
 
@@ -264,14 +265,28 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         }
     }
 
-    // Cleaning up the Agora engine during OnApplicationQuit() is an essential part of the Agora process with Unity. 
-    private void OnApplicationQuit()
+    private void TerminateAgoraEngine()
     {
-        if(mRtcEngine != null)
+        if (mRtcEngine != null)
         {
             mRtcEngine.LeaveChannel();
             mRtcEngine = null;
             IRtcEngine.Destroy();
         }
+    }
+
+    private IEnumerator OnLeftRoom()
+    {
+        //Wait untill Photon is properly disconnected (empty room, and connected back to main server)
+        while (PhotonNetwork.room != null || PhotonNetwork.connected == false)
+            yield return 0;
+
+        OnApplicationQuit();
+    }
+
+    // Cleaning up the Agora engine during OnApplicationQuit() is an essential part of the Agora process with Unity. 
+    private void OnApplicationQuit()
+    {
+        TerminateAgoraEngine();
     }
 }
