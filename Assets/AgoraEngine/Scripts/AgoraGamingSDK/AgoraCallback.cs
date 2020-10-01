@@ -47,9 +47,9 @@ namespace agora_gaming_rtc
         */
         public delegate void OnConnectionLostHandler();
 
-        /** **DEPRECATED** Occurs when the connection between the SDK and the server is interrupted.
+        /** Occurs when the connection between the SDK and the server is interrupted.
         * 
-        * Deprecated as of v2.3.2. Replaced by the {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} callback.
+        * @deprecated Deprecated as of v2.3.2. Replaced by the {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} callback.
         * 
         * The SDK triggers this callback when it loses connection with the server for more than four seconds after the connection is established.
         * 
@@ -67,7 +67,7 @@ namespace agora_gaming_rtc
         * 
         * After a token is specified by calling the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} method, if the SDK losses connection with the Agora server due to network issues, the token may expire after a certain period of time and a new token may be required to reconnect to the server.
         * 
-        * This callback notifies the application to generate a new token. Call the {@link agora_gaming_rtc.IRtcEngine.RenewToken RenewToken} method to renew the token.
+        * This callback notifies the app to generate a new token and call `JoinChannelByKey` to rejoin the channel with the new token.
         */
         public delegate void OnRequestTokenHandler();
 
@@ -98,7 +98,7 @@ namespace agora_gaming_rtc
         * Reasons why the user is offline:
         * 
         * - Leave the channel: When the user/host leaves the channel, the user/host sends a goodbye message. When the message is received, the SDK assumes that the user/host leaves the channel.
-        * - Drop offline: When no data packet of the user or host is received for a certain period of time (20 seconds for the Communication profile, and more for the Live-broadcast profile), the SDK assumes that the user/host drops offline. Unreliable network connections may lead to false detections, so we recommend using a signaling system for more reliable offline detection.
+        * - Drop offline: When no data packet of the user or host is received for a certain period of time (20 seconds for the Communication profile, and more for the Live-broadcast profile), the SDK assumes that the user/host drops offline. Unreliable network connections may lead to false detections, so we recommend using the Agora RTM SDK for more reliable offline detection.
         * 
         * @param uid The user ID of the user leaving the channel or going offline.
         * @param reason The reason why the user is offline: #USER_OFFLINE_REASON.
@@ -107,7 +107,7 @@ namespace agora_gaming_rtc
 
         /** Reports which users are speaking, the speakers' volume and whether the local user is speaking.
         * 
-        * This callback reports the IDs and volumes of the loudest speakers at the moment in the channel, and whether the local user is speaking.
+        * This callback reports the IDs and volumes of the loudest speakers (at most 3 users) at the moment in the channel, and whether the local user is speaking.
         * 
         * By default, this callback is disabled. You can enable it by calling the {@link agora_gaming_rtc.IRtcEngine.EnableAudioVolumeIndication EnableAudioVolumeIndication} method. Once enabled, this callback is triggered at the set interval, regardless of whether a user speaks or not.
         * 
@@ -118,17 +118,16 @@ namespace agora_gaming_rtc
         * - Calling the {@link agora_gaming_rtc.IRtcEngine.MuteLocalAudioStream MuteLocalAudioStream} method affects the SDK's behavior:
         *       - If the local user calls the `MuteLocalAudioStream` method, the SDK stops triggering the local user's callback.
         *       - 20 seconds after a remote speaker calls the `MuteLocalAudioStream` method, the remote speakers' callback excludes this remote user's information; 20 seconds after all remote users call the muteLocalAudioStream method, the SDK stops triggering the remote speakers' callback.
-        * - An empty `speakers` array in the `OnVolumeIndicationHandler` callback suggests that no remote user is speaking at the moment.
         * 
         * @param speakers AudioVolumeInfo:
         * - In the local user's callback, this struct contains the following members:
-        *       - uid = 0,
-        *       - volume = totalVolume, which reports the sum of the voice volume and audio-mixing volume of the local user, and
-        *       - vad, which reports the voice activity status of the local user.
+        *       - `uid` = 0,
+        *       - `volume` = `totalVolume`, which reports the sum of the voice volume and audio-mixing volume of the local user, and
+        *       - `vad`, which reports the voice activity status of the local user.
         * - In the remote speakers' callback, this array contains the following members:
-        *       - uid of the remote speaker,
-        *       - volume, which reports the sum of the voice volume and audio-mixing volume of each remote speaker, and
-        *       - vad = 0.
+        *       - `uid` of the remote speaker,
+        *       - `volume`, which reports the sum of the voice volume and audio-mixing volume of each remote speaker, and
+        *       - `vad` = 0.
         * An empty speakers array in the callback indicates that no remote user is speaking at the moment.
         * @param speakerNumber Total number of speakers. The value range is [0, 3].
         * - In the local user’s callback, `speakerNumber` = 1, regardless of whether the local user speaks or not.
@@ -140,6 +139,8 @@ namespace agora_gaming_rtc
         public delegate void OnVolumeIndicationHandler(AudioVolumeInfo[] speakers, int speakerNumber, int totalVolume);
 
         /** Occurs when a remote user's audio stream playback pauses/resumes.
+        * 
+        * @deprecated This method is deprecated from v3.0.1, use the {@link agora_gaming_rtc.OnRemoteAudioStateChangedHandler OnRemoteAudioStateChangedHandler} callback instead.
         * 
         * The SDK triggers this callback when the remote user stops or resumes sending the audio stream by calling the {@link agora_gaming_rtc.IRtcEngine.MuteLocalAudioStream MuteLocalAudioStream} method.
         * 
@@ -180,7 +181,7 @@ namespace agora_gaming_rtc
 
         /** Occurs when the audio mixing file playback finishes.
         * 
-        * **DEPRECATED** use {@link agora_gaming_rtc.OnAudioMixingStateChangedHandler OnAudioMixingStateChangedHandler} instead.
+        * @deprecated use {@link agora_gaming_rtc.OnAudioMixingStateChangedHandler OnAudioMixingStateChangedHandler} instead.
         * 
         * You can start an audio mixing file playback by calling the {@link agora_gaming_rtc.IRtcEngine.StartAudioMixing StartAudioMixing} method. The SDK triggers this callback when the audio mixing file playback finishes.
         * 
@@ -195,13 +196,13 @@ namespace agora_gaming_rtc
         * 
         * @note This callback is for Android and iOS only.
         * 
-        * @param route Audio output routing. See: AUDIO_ROUTE.
+        * @param route Audio output routing. See: #AUDIO_ROUTE.
         */
         public delegate void OnAudioRouteChangedHandler(AUDIO_ROUTE route);
 
         /** Occurs when the first remote video frame is received and decoded.
         * 
-        * **DEPRECATED** Use the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters instead:
+        * @deprecated Use the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters instead:
         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_STARTING REMOTE_VIDEO_STATE_STARTING(1)}
         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_DECODING REMOTE_VIDEO_STATE_DECODING(2)}
         * 
@@ -246,6 +247,7 @@ namespace agora_gaming_rtc
         * You can also use the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_STOPPED REMOTE_VIDEO_STATE_STOPPED(0)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED(5)}.
         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_DECODING REMOTE_VIDEO_STATE_DECODING(2)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED(6)}.
+        * 
         * The SDK triggers this callback when the remote user stops or resumes sending the video stream by calling the {@link agora_gaming_rtc.IRtcEngine.MuteLocalVideoStream MuteLocalVideoStream} method.
         * 
         * @note This callback returns invalid when the number of users in a channel exceeds 20.
@@ -257,9 +259,9 @@ namespace agora_gaming_rtc
         */
         public delegate void OnUserMuteVideoHandler(uint uid, bool muted);
     
-        /** **DEPRECATED** Occurs when the microphone is enabled/disabled.
+        /** Occurs when the microphone is enabled/disabled.
         * 
-        * The `OnMicrophoneEnabledHandler` callback is deprecated. Use {@link agora_gaming_rtc.LOCAL_AUDIO_STREAM_STATE#LOCAL_AUDIO_STREAM_STATE_STOPPED LOCAL_AUDIO_STREAM_STATE_STOPPED(0)} or {@link agora_gaming_rtc.LOCAL_AUDIO_STREAM_STATE#LOCAL_AUDIO_STREAM_STATE_RECORDING LOCAL_AUDIO_STREAM_STATE_RECORDING(1)} in the {@link agora_gaming_rtc.OnLocalAudioStateChangedHandler OnLocalAudioStateChangedHandler} callback instead.
+        * @deprecated Use {@link agora_gaming_rtc.LOCAL_AUDIO_STREAM_STATE#LOCAL_AUDIO_STREAM_STATE_STOPPED LOCAL_AUDIO_STREAM_STATE_STOPPED(0)} or {@link agora_gaming_rtc.LOCAL_AUDIO_STREAM_STATE#LOCAL_AUDIO_STREAM_STATE_RECORDING LOCAL_AUDIO_STREAM_STATE_RECORDING(1)} in the {@link agora_gaming_rtc.OnLocalAudioStateChangedHandler OnLocalAudioStateChangedHandler} callback instead.
         * 
         * The SDK triggers this callback when the local user resumes or stops capturing the local audio stream by calling the {@link agora_gaming_rtc.IRtcEngine.EnableLocalAudio EnableLocalAudio} method.
         * 
@@ -271,7 +273,7 @@ namespace agora_gaming_rtc
 
         /** Occurs when a method is executed by the SDK.
         * 
-        * @param err The error code (ERROR_CODE_TYPE) returned by the SDK when a method call fails. If the SDK returns 0, then the method call is successful.
+        * @param err The [Error Code](./index.html#error). returned by the SDK when a method call fails. If the SDK returns 0, then the method call is successful.
         * @param api The method executed by the SDK.
         * @param result The result of the method call.
         */
@@ -293,14 +295,16 @@ namespace agora_gaming_rtc
 
         /** Occurs when the engine receives the first audio frame from a specific remote user.
         *
+        * @deprecated v3.0.1 This callback is deprecated. Use {@link agora_gaming_rtc.OnRemoteAudioStateChangedHandler OnRemoteAudioStateChangedHandler} instead.
+        *
         * @param userId The user ID of the remote user.
         * @param elapsed The time elapsed (ms) from the remote user calling {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} until the SDK triggers this callback.
         */    
         public delegate void OnFirstRemoteAudioFrameHandler(uint userId, int elapsed);
 
-        /** **DEPRECATED** Reports the statistics of the audio stream from each remote user/host.
+        /** Reports the statistics of the audio stream from each remote user/host.
         * 
-        * Deprecated as of v2.3.2. Use the {@link agora_gaming_rtc.OnRemoteAudioStatsHandler OnRemoteAudioStatsHandler} callback instead.
+        * @deprecated Deprecated as of v2.3.2. Use the {@link agora_gaming_rtc.OnRemoteAudioStatsHandler OnRemoteAudioStatsHandler} callback instead.
         * 
         * The SDK triggers this callback once every two seconds to report the audio quality of each remote user/host sending an audio stream. If a channel has multiple users/hosts sending audio streams, the SDK triggers this callback as many times.
         * 
@@ -320,17 +324,21 @@ namespace agora_gaming_rtc
         public delegate void OnStreamInjectedStatusHandler(string url, uint userId, int status);
 
         /** Reports the result of calling the {@link agora_gaming_rtc.IRtcEngine.RemovePublishStreamUrl RemovePublishStreamUrl} method. (CDN live only.)
-         - 
-         - This callback indicates whether you have successfully removed an RTMP stream from the CDN.
-         - 
-         - @param url The RTMP URL address.
+         *
+         * @deprecated v3.0.1 This method is deprecated. Use {@link agora_gaming_rtc.OnRtmpStreamingStateChangedHandler OnRtmpStreamingStateChangedHandler} instead.
+         * 
+         * This callback indicates whether you have successfully removed an RTMP stream from the CDN.
+         * 
+         * @param url The RTMP URL address.
          */
         public delegate void OnStreamUnpublishedHandler(string url);
 
         /** Reports the result of calling the {@link agora_gaming_rtc.IRtcEngine.AddPublishStreamUrl AddPublishStreamUrl} method. (CDN live only.)
          * 
+         * @deprecated v3.0.1 This method is deprecated. Use {@link agora_gaming_rtc.OnRtmpStreamingStateChangedHandler OnRtmpStreamingStateChangedHandler} instead.
+         *
          * @param url The RTMP URL address.
-         * @param error Error code: Main errors include:
+         * @param error Error code: [Error Code](./index.html#error).
          * - `ERR_OK(0)`: The publishing succeeds.
          * - `ERR_FAILED(1)`: The publishing fails.
          * - `ERR_INVALID_ARGUMENT(2)`: Invalid argument used. If, for example, you did not call {@link agora_gaming_rtc.IRtcEngine.SetLiveTranscoding SetLiveTranscoding} to configure LiveTranscoding before calling `AddPublishStreamUrl`, the SDK reports `ERR_INVALID_ARGUMENT(2)`.
@@ -352,7 +360,7 @@ namespace agora_gaming_rtc
          * 
          * @param userId The user ID of the remote user sending the message.
          * @param streamId The stream ID.
-         * @param code The error code.
+         * @param code The error code: [Error Code](./index.html#error).
          * @param missed The number of lost messages.
          * @param cached The number of incoming cached messages when the data stream is interrupted.
          */
@@ -367,11 +375,11 @@ namespace agora_gaming_rtc
          * @param data The data received by the local user.
          * @param length The length of the data in bytes.
          */
-        public delegate void OnStreamMessageHandler(uint userId, int streamId, string data, int length);
+        public delegate void OnStreamMessageHandler(uint userId, int streamId, byte[] data, int length);
 
-        /** **DEPRECATED** from v2.3.2. Replaced by the {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} callback.
+        /** Occurs when your connection is banned by the Agora Server.
          * 
-         * Occurs when your connection is banned by the Agora Server.
+         * @deprecated from v2.3.2. Replaced by the {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} callback.
          */
         public delegate void OnConnectionBannedHandler();
 
@@ -402,11 +410,11 @@ namespace agora_gaming_rtc
          */
         public delegate void OnActiveSpeakerHandler(uint uid);
 
-        /** **DEPRECATED** Occurs when the video stops playing.
+        /** Occurs when the video stops playing.
+         * 
+         * @deprecated Deprecated as of v2.4.1. Use {@link agora_gaming_rtc.LOCAL_VIDEO_STREAM_STATE#LOCAL_VIDEO_STREAM_STATE_STOPPED LOCAL_VIDEO_STREAM_STATE_STOPPED(0)} in the {@link agora_gaming_rtc.OnLocalVideoStateChangedHandler OnLocalVideoStateChangedHandler} callback instead.
          * 
          * The application can use this callback to change the configuration of the view (for example, displaying other pictures in the view) after the video stops playing.
-         * 
-         * Deprecated as of v2.4.1. Use {@link agora_gaming_rtc.LOCAL_VIDEO_STREAM_STATE#LOCAL_VIDEO_STREAM_STATE_STOPPED LOCAL_VIDEO_STREAM_STATE_STOPPED(0)} in the {@link agora_gaming_rtc.OnLocalVideoStateChangedHandler OnLocalVideoStateChangedHandler} callback instead.
          */
         public delegate void OnVideoStoppedHandler();
 
@@ -418,20 +426,9 @@ namespace agora_gaming_rtc
          */
         public delegate void OnFirstLocalVideoFrameHandler(int width, int height, int elapsed);
 
-        /** **DEPRECATED** Occurs when the first remote video frame is received and decoded.
+        /** Occurs when the first remote video frame is received and decoded.
          * 
-         * This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
-         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_STARTING REMOTE_VIDEO_STATE_STARTING(1)}
-         * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_DECODING REMOTE_VIDEO_STATE_DECODING(2)}
-         * - 
-         * This callback is triggered in either of the following scenarios:
-         * - The remote user joins the channel and sends the video stream.
-         * - The remote user stops sending the video stream and re-sends it after 15 seconds. Reasons for such an interruption include:
-         *   - The remote user leaves the channel.
-         *   - The remote user drops offline.
-         *   - The remote user calls the {@link agora_gaming_rtc.IRtcEngine.MuteLocalVideoStream MuteLocalVideoStream} method to stop sending the video stream.
-         *   - The remote user calls the {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} method to disable video.
-         * The application can configure the user view settings in this callback.
+         * The SDK triggers this callback when the first frame of the remote video is displayed in the user's video window. The application can retrieve the time elapsed from a user joining the channel until the first video frame is displayed.
          * 
          * @param uid User ID of the remote user sending the video stream.
          * @param width Width (px) of the video frame.
@@ -440,9 +437,9 @@ namespace agora_gaming_rtc
          */    
         public delegate void OnFirstRemoteVideoFrameHandler(uint uid, int width, int height, int elapsed);
 
-        /** **DEPRECATED** Occurs when a specific remote user enables/disables the video module.
+        /** Occurs when a specific remote user enables/disables the video module.
          * 
-         * This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
+         * @deprecated This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
          * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_STOPPED REMOTE_VIDEO_STATE_STOPPED(0)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED(5)}.
          * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_DECODING REMOTE_VIDEO_STATE_DECODING(2)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED(6)}.
          *         
@@ -459,9 +456,9 @@ namespace agora_gaming_rtc
          */
         public delegate void OnUserEnableVideoHandler(uint uid, bool enabled);
 
-        /** **DEPRECATED** Occurs when a specified remote user enables/disables the local video capturing function.
+        /** Occurs when a specified remote user enables/disables the local video capturing function.
          * 
-         * This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
+         * @deprecated This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStateChangedHandler OnRemoteVideoStateChangedHandler} callback with the following parameters:
          * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_STOPPED REMOTE_VIDEO_STATE_STOPPED(0)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED(5)}.
          * - {@link agora_gaming_rtc.REMOTE_VIDEO_STATE#REMOTE_VIDEO_STATE_DECODING REMOTE_VIDEO_STATE_DECODING(2)} and {@link agora_gaming_rtc.REMOTE_VIDEO_STATE_REASON#REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED(6)}.
          * 
@@ -510,11 +507,11 @@ namespace agora_gaming_rtc
 
         /** Reports the last mile network quality of each user in the channel once every two seconds.
          * 
-         * Last mile refers to the connection between the local device and Agora's edge server. This callback reports once every two seconds the last mile network conditions of each user in the channel. If a channel includes multiple users, the SDK triggers this callback as many times.
+         * Last mile refers to the connection between the local device and the Agora edge server. This callback reports once every two seconds the last mile network conditions of each user in the channel. If a channel includes multiple users, the SDK triggers this callback as many times.
          * 
          * @param uid User ID. The network quality of the user with this `uid` is reported. If `uid` is 0, the local network quality is reported.
          * @param txQuality Uplink transmission quality rating of the user in terms of the transmission bitrate, packet loss rate, average RTT (Round-Trip Time), and jitter of the uplink network. `txQuality` is a quality rating helping you understand how well the current uplink network conditions can support the selected VideoEncoderConfiguration. For example, a 1000 Kbps uplink network may be adequate for video frames with a resolution of 640 × 480 and a frame rate of 15 fps in the Live-broadcast profile, but may be inadequate for resolutions higher than 1280 × 720. See #QUALITY_TYPE.
-         * @param rxQuality Downlink network quality rating of the user in terms of the packet loss rate, average RTT, and jitter of the downlink network. See #QUALITY_TYPE.
+         * @param rxQuality Downlink network quality rating of the user in terms of the packet loss rate, average RTT, and jitter of the downlink network. See #QUALITY_TYPE. 
          */
         public delegate void OnNetworkQualityHandler(uint uid, int txQuality, int rxQuality);
 
@@ -557,11 +554,11 @@ namespace agora_gaming_rtc
          */
         public delegate void OnAudioDeviceStateChangedHandler(string deviceId, int deviceType, int deviceState);
    
-        /** **DEPRECATED** Occurs when the camera turns on and is ready to capture the video.
+        /** Occurs when the camera turns on and is ready to capture the video.
+         * 
+         * @deprecated Deprecated as of v2.4.1. Use {@link agora_gaming_rtc.LOCAL_VIDEO_STREAM_STATE#LOCAL_VIDEO_STREAM_STATE_CAPTURING LOCAL_VIDEO_STREAM_STATE_CAPTURING(1)} in the {@link agora_gaming_rtc.OnLocalVideoStateChangedHandler OnLocalVideoStateChangedHandler} callback instead.
          * 
          * If the camera fails to turn on, fix the error reported in the {@link agora_gaming_rtc.OnSDKErrorHandler OnSDKErrorHandler} callback.
-         * 
-         * Deprecated as of v2.4.1. Use {@link agora_gaming_rtc.LOCAL_VIDEO_STREAM_STATE#LOCAL_VIDEO_STREAM_STATE_CAPTURING LOCAL_VIDEO_STREAM_STATE_CAPTURING(1)} in the {@link agora_gaming_rtc.OnLocalVideoStateChangedHandler OnLocalVideoStateChangedHandler} callback instead.
          */
         public delegate void OnCameraReadyHandler();
 
@@ -619,9 +616,9 @@ namespace agora_gaming_rtc
          */
         public delegate void OnVideoDeviceStateChangedHandler(string deviceId, int deviceType, int deviceState);
 
-        /** **DEPRECATED** Reports the transport-layer statistics of each remote video stream.
+        /** Reports the transport-layer statistics of each remote video stream.
          * 
-         * This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStatsHandler OnRemoteVideoStatsHandler} callback.
+         * @deprecated This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteVideoStatsHandler OnRemoteVideoStatsHandler} callback.
          * 
          * This callback reports the transport-layer statistics, such as the packet loss rate and network time delay, once every two seconds after the local user receives a video packet from a remote user.
          * 
@@ -634,7 +631,7 @@ namespace agora_gaming_rtc
    
         /** Reports the transport-layer statistics of each remote audio stream.
          * 
-         * This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteAudioStatsHandler OnRemoteAudioStatsHandler} callback.
+         * @deprecated This callback is deprecated and replaced by the {@link agora_gaming_rtc.OnRemoteAudioStatsHandler OnRemoteAudioStatsHandler} callback.
          * 
          * This callback reports the transport-layer statistics, such as the packet loss rate and network time delay, once every two seconds after the local user receives an audio packet from a remote user.
          * 
@@ -682,6 +679,8 @@ namespace agora_gaming_rtc
 
         /** Occurs when the SDK decodes the first remote audio frame for playback.
          * 
+         * @deprecated v3.0.1 This callback is deprecated. Use {@link agora_gaming_rtc.OnRemoteAudioStateChangedHandler OnRemoteAudioStateChangedHandler} instead.
+         *
          * This callback is triggered in either of the following scenarios:
          * - The remote user joins the channel and sends the audio stream.
          * - The remote user stops sending the audio stream and re-sends it after 15 seconds. Reasons for such an interruption include:
@@ -789,7 +788,35 @@ namespace agora_gaming_rtc
 
         /** Reports events during the media stream relay.
          * 
-         * @param events The event code in #CHANNEL_MEDIA_RELAY_EVENT.
+         * @param events The event code in #CHANNEL_MEDIA_RELAY_EVENT.//TODO
          */
         public delegate void OnChannelMediaRelayEventHandler(CHANNEL_MEDIA_RELAY_EVENT events);
+        
+        /**
+         * Reports the face detection result of the local user. Applies to Android and iOS only.
+         * @since v3.0.1
+         *
+         * Once you enable face detection by calling {@link agora_gaming_rtc.IRtcEngine.EnableFaceDetection EnableFaceDetection(true)}, you can get the following information on the local user in real-time:
+         * - The width and height of the local video.
+         * - The position of the human face in the local video.
+         * - The distance between the human face and the device screen. This value is based on the fitting calculation of the local video size and the position of the human face.
+         *
+         * @note
+         * - If the SDK does not detect a face, it reduces the frequency of this callback to reduce power consumption on the local device.
+         * - The SDK stops triggering this callback when a human face is in close proximity to the screen.
+         * - On Android, the `distance` value reported in this callback may be slightly different from the actual distance. Therefore, Agora does not recommend using it for
+         * accurate calculation.
+         * @param imageWidth The width (px) of the local video.
+         * @param imageHeight The height (px) of the local video.
+         * @param vecRectangle The position and size of the human face on the local video:
+         * - `x`: The x coordinate (px) of the human face in the local video. Taking the top left corner of the captured video as the origin,
+         * the x coordinate represents the relative lateral displacement of the top left corner of the human face to the origin.
+         * - `y`: The y coordinate (px) of the human face in the local video. Taking the top left corner of the captured video as the origin,
+         * the y coordinate represents the relative longitudinal displacement of the top left corner of the human face to the origin.
+         * - `width`: The width (px) of the human face in the captured video.
+         * - `height`: The height (px) of the human face in the captured video.
+         * @param vecDistance The distance (cm) between the human face and the screen.
+         * @param numFaces The number of faces detected. If the value is 0, it means that no human face is detected.
+         */
+        public delegate void OnFacePositionChangedHandler(int imageWidth, int imageHeight, Rectangle vecRectangle, int vecDistance, int numFaces);
 }

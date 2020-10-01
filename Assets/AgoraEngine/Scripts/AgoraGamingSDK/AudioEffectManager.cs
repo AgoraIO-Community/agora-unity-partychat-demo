@@ -41,7 +41,7 @@ namespace agora_gaming_rtc
     /** The definition of AudioEffectManagerImpl. */
 	public sealed class  AudioEffectManagerImpl : IAudioEffectManager
 	{
-		private IRtcEngine _mEngine;
+		private IRtcEngine _mEngine = null;
 		private static AudioEffectManagerImpl _audioEffectManagerImplInstance = null;
 
 		private AudioEffectManagerImpl (IRtcEngine rtcEngine)
@@ -113,7 +113,7 @@ namespace agora_gaming_rtc
          * - Playing multiple online audio effect files simultaneously is not supported on macOS and Windows.
          * 
          * @param soundId ID of the specified audio effect. Each audio effect has a unique ID.
-         * @param filePath The absolute path to the local audio effect file or the URL of the online audio effect file.
+         * @param filePath Specifies the absolute path (including the suffixes of the filename) to the local audio effect file or the URL of the online audio effect file. Supported audio formats: mp3, mp4, m4a, aac, 3gp, mkv and wav.
          * @param loopCount Sets the number of times the audio effect loops:
          * - 0: Play the audio effect once.
          * - 1: Play the audio effect twice.

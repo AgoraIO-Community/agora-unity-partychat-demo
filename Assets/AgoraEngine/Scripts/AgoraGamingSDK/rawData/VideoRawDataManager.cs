@@ -19,12 +19,14 @@ namespace agora_gaming_rtc
     /** The definition of VideoRawDataManager. */
     public sealed class VideoRawDataManager : IVideoRawDataManager
     {
-        private static IRtcEngine _irtcEngine;
-        private static VideoRawDataManager _videoRawDataManagerInstance;
+        private static IRtcEngine _irtcEngine = null;
+        private static VideoRawDataManager _videoRawDataManagerInstance = null;
         /** Occurs each time the SDK receives a video frame captured by the local camera.
          * 
          * After you successfully register the video frame observer, the SDK triggers this callback each time a video frame is received. In this callback, you can get the video data captured by the local camera. You can then pre-process the data according to your scenarios.
          * 
+         * @note This callback does not support sending processed RGBA video data back to the SDK.
+         *
          * @param videoFrame See VideoFrame.
          */
         public delegate void OnCaptureVideoFrameHandler(VideoFrame videoFrame);
@@ -33,6 +35,8 @@ namespace agora_gaming_rtc
          * 
          * After you successfully register the video frame observer, the SDK triggers this callback each time a video frame is received. In this callback, you can get the video data sent by the remote user. You can then post-process the data according to your scenarios.
          * 
+         * @note This callback does not support sending processed RGBA video data back to the SDK.
+         *
          * @param uid ID of the remote user who sends the current video frame.
          * @param videoFrame See VideoFrame.
          */
@@ -174,6 +178,7 @@ namespace agora_gaming_rtc
                 videoFrame.yStride = yStride;
                 byte[] yB = new byte[yStride * height];
                 Marshal.Copy(yBuffer, yB, 0, yStride * height);
+                videoFrame.buffer = yB; 
                 videoFrame.rotation = rotation;
                 videoFrame.renderTimeMs = renderTimeMs;
                 _videoRawDataManagerInstance.OnRenderVideoFrame(uid, videoFrame);

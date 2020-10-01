@@ -59,8 +59,8 @@ namespace agora_gaming_rtc
         public delegate bool OnSendAudioPacketHandler(Packet packet);
         public OnSendAudioPacketHandler _OnSendAudioPacket;
 
-        private static IRtcEngine _irtcEngine;
-        public static PacketObserver _packetObserver;
+        private static IRtcEngine _irtcEngine = null;
+        public static PacketObserver _packetObserver = null;
 
         private PacketObserver(IRtcEngine irtcEngine)
         {
@@ -87,7 +87,7 @@ namespace agora_gaming_rtc
 
         /** Registers a packet observer.
          * 
-         * The Agora SDK allows your application to register a packet observer to receive callbacks for voice or video packet transmission.
+         * The Agora RTC SDK allows your application to register a packet observer to receive callbacks for voice or video packet transmission.
          * 
          * @note
          * - The size of the packet sent to the network after processing should not exceed 1200 bytes, otherwise, the packet may fail to be sent.

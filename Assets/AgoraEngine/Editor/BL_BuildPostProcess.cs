@@ -1,9 +1,10 @@
-﻿#if UNITY_IPHONE
+﻿#if UNITY_IPHONE || UNITY_STANDALONE_OSX
+
 using System.IO;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
-
+using UnityEditor.iOS.Xcode.Extensions;
 
 public class BL_BuildPostProcess
 {
@@ -14,6 +15,18 @@ public class BL_BuildPostProcess
         if (buildTarget == BuildTarget.iOS)
         {
             LinkLibraries(path);
+            UpdatePermission(path + "/Info.plist");
+        }
+        else if (buildTarget == BuildTarget.StandaloneOSX)
+        {
+            string plistPath = path + "/Contents/Info.plist"; // straight to a binary
+            if (path.EndsWith(".xcodeproj"))
+            {
+                // This must be a build that exports Xcode
+                string dir = Path.GetDirectoryName(path);
+                plistPath = dir + "/" + PlayerSettings.productName + "/Info.plist";
+            }
+            UpdatePermission(plistPath);
         }
     }
 
@@ -32,7 +45,7 @@ public class BL_BuildPostProcess
 #if UNITY_2019_3_OR_NEWER
         return proj.GetUnityFrameworkTargetGuid();
 #else
-	    return proj.TargetGuidByName("Unity-iPhone");
+        return proj.TargetGuidByName("Unity-iPhone");
 #endif
     }
     // The followings are the addtional frameworks to add to the project
@@ -47,7 +60,7 @@ public class BL_BuildPostProcess
         "libresolv.tbd",
     };
 
-    public static void LinkLibraries(string path)
+    static void LinkLibraries(string path)
     {
         // linked library
         string projPath = path + "/Unity-iPhone.xcodeproj/project.pbxproj";
@@ -63,10 +76,33 @@ public class BL_BuildPostProcess
         {
             proj.AddFrameworkToProject(target, framework, true);
         }
-        File.WriteAllText(projPath, proj.WriteToString());
 
-        // permission
-        string pListPath = path + "/Info.plist";
+        // embedded frameworks
+#if UNITY_2019_1_OR_NEWER
+        target = proj.GetUnityMainTargetGuid();
+#endif
+        const string defaultLocationInProj = "Frameworks/AgoraEngine/Plugins/iOS";
+        const string rtcFrameworkName = "AgoraRtcKit.framework";
+        const string cryptoFrameworkName = "AgoraRtcCryptoLoader.framework";
+
+        string fw1 = Path.Combine(defaultLocationInProj, rtcFrameworkName);
+        string fw2 = Path.Combine(defaultLocationInProj, cryptoFrameworkName);
+        string fileGuid = proj.AddFile(fw1, fw1, PBXSourceTree.Source);
+        proj.AddFileToEmbedFrameworks(target, fileGuid);
+        fileGuid = proj.AddFile(fw2, fw2, PBXSourceTree.Source);
+        proj.AddFileToEmbedFrameworks(target, fileGuid);
+        proj.SetBuildProperty(target, "LD_RUNPATH_SEARCH_PATHS", "$(inherited) @executable_path/Frameworks");
+
+        // done, write to the project file
+        File.WriteAllText(projPath, proj.WriteToString());
+    }
+
+    /// <summary>
+    ///   Update the permission 
+    /// </summary>
+    /// <param name="pListPath">path to the Info.plist file</param>
+    static void UpdatePermission(string pListPath)
+    {
         PlistDocument plist = new PlistDocument();
         plist.ReadFromString(File.ReadAllText(pListPath));
         PlistElementDict rootDic = plist.root;
@@ -76,5 +112,7 @@ public class BL_BuildPostProcess
         rootDic.SetString(micPermission, "Voice call need to user mic");
         File.WriteAllText(pListPath, plist.WriteToString());
     }
+
 }
+
 #endif

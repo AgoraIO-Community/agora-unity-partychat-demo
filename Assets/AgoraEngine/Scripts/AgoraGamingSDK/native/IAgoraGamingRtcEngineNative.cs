@@ -23,21 +23,21 @@ namespace agora_gaming_rtc
 
         protected delegate void EngineEventOnPullAudioFrameHandler(int type, int samples, int bytesPerSample, int channels, int samplesPerSec, IntPtr buffer, long renderTimeMs, int avsync_type);
         
-        protected delegate void EngineEventOnLeaveChannelHandler(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage);
+        protected delegate void EngineEventOnLeaveChannelHandler(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes);
 
         protected delegate void EngineEventOnUserOfflineHandler(uint uid, int offLineReason);
 
         protected delegate void EngineEventOnAudioVolumeIndicationHandler(string volumeInfo, int speakerNumber, int totalVolume);     
 
-        protected delegate void EngineEventOnRtcStatsHandler(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage);
+        protected delegate void EngineEventOnRtcStatsHandler(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes);
                                 
         protected delegate void EngineEventOnAudioRouteChangedHandler(int route);
 
         protected delegate void EngineEventOnLocalVideoStatsHandler(int sentBitrate, int sentFrameRate, int encoderOutputFrameRate, int rendererOutputFrameRate, int targetBitrate, int targetFrameRate, int qualityAdaptIndication, int encodedBitrate, int encodedFrameWidth, int encodedFrameHeight, int encodedFrameCount, int codecType);
 
-        protected delegate void EngineEventOnRemoteVideoStatsHandler(uint uid, int delay, int width, int height, int receivedBitrate, int decoderOutputFrameRate, int rendererOutputFrameRate, int remoteVideoStreamType, int packetLossRate, int totalFrozenTime, int frozenRate);
+        protected delegate void EngineEventOnRemoteVideoStatsHandler(uint uid, int delay, int width, int height, int receivedBitrate, int decoderOutputFrameRate, int rendererOutputFrameRate, int packetLossRate, int rxStreamType, int totalFrozenTime, int frozenRate, int totalActiveTime);
         
-        protected delegate void EngineEventOnRemoteAudioStatsHandler(uint uid, int quality, int networkTransportDelay, int jitterBufferDelay, int audioLossRate, int numChannels, int receivedSampleRate, int receivedBitrate, int totalFrozenTime, int frozenRate);
+        protected delegate void EngineEventOnRemoteAudioStatsHandler(uint uid, int quality, int networkTransportDelay, int jitterBufferDelay, int audioLossRate, int numChannels, int receivedSampleRate, int receivedBitrate, int totalFrozenTime, int frozenRate, int totalActiveTime);
 
         protected delegate void EngineEventOnAudioDeviceVolumeChangedHandler(int deviceType, int volume, bool muted);
 
@@ -84,6 +84,18 @@ namespace agora_gaming_rtc
 
         protected delegate void EngineEventOnLocalVideoStateChanged(int localVideoState, int error);
 
+        protected delegate void EngineEventOnFacePositionChanged(int imageWidth, int imageHeight, int x, int y, int width, int height, int vecDistance, int numFaces);
+        
+        protected delegate void ChannelEngineEventOnLeaveChannelHandler(string channelId, uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes);
+
+        protected delegate void ChannelEngineEventOnRtcStatsHandler(string channelId, uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes);
+
+        protected delegate void ChannelEngineEventOnRemoteVideoStatsHandler(string channelId, uint uid, int delay, int width, int height, int receivedBitrate, int decoderOutputFrameRate, int rendererOutputFrameRate, int packetLossRate, int rxStreamType, int totalFrozenTime, int frozenRate, int totalActiveTime);
+
+        protected delegate void ChannelEngineEventOnRemoteAudioStatsHandler(string channelId, uint uid, int quality, int networkTransportDelay, int jitterBufferDelay, int audioLossRate, int numChannels, int receivedSampleRate, int receivedBitrate, int totalFrozenTime, int frozenRate, int totalActiveTime);
+        
+        protected delegate void EngineEventOnStreamMessageHandler(uint userId, int streamId, IntPtr data, int length);
+
 #region DllImport
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR
 		public const string MyLibName = "agoraSdkCWrapper";
@@ -98,6 +110,9 @@ namespace agora_gaming_rtc
     // standard sdk api
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern bool createEngine(string appId);
+      
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern bool createEngine2(string appId, uint areaCode);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern bool deleteEngine();
@@ -275,9 +290,9 @@ namespace agora_gaming_rtc
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern int createDataStream(bool reliable, bool ordered);
-        // TODO! supports general data later. now only string is supported
+
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int sendStreamMessage(int streamId, string data, Int64 length);
+        protected static extern int sendStreamMessage(int streamId, byte[] data, Int64 length);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern int setSpeakerphoneVolume(int volume);
@@ -337,13 +352,13 @@ namespace agora_gaming_rtc
         protected static extern int deleteTexture(int tex);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int updateVideoRawData(IntPtr data, uint uid);
+        protected static extern int updateVideoRawData(IntPtr data, uint uid);    
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int addUserVideoInfo(uint userId, uint textureId);
+        protected static extern void addUserVideoInfo(uint userId, uint textureId);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int removeUserVideoInfo(uint userId);
+        protected static extern void removeUserVideoInfo(uint userId);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern int setPlaybackDeviceVolume(int volume);
@@ -397,7 +412,7 @@ namespace agora_gaming_rtc
         protected static extern int setAudioProfile(int audioProfile, int scenario);
        
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int setVideoEncoderConfiguration(int width, int height, int frameRate, int minFrameRate, int bitrate, int minBitrate, int orientationMode, int degradationPreference);
+        protected static extern int setVideoEncoderConfiguration(int width, int height, int frameRate, int minFrameRate, int bitrate, int minBitrate, int orientationMode, int degradationPreference, int videoMirrorMode);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern int adjustAudioMixingPlayoutVolume(int volume);
@@ -432,7 +447,7 @@ namespace agora_gaming_rtc
         protected static extern IntPtr getErrorDescription(int code);
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
-        protected static extern int setLiveTranscoding(int width, int height, int videoBitrate, int videoFramerate, bool lowLatency, int videoGroup, int video_codec_profile, uint backgroundColor, uint userCount, uint transcodingUserUid, int transcodingUsersX, int transcodingUsersY, int transcodingUsersWidth, int transcodingUsersHeight, int transcodingUsersZorder, double transcodingUsersAlpha, int transcodingUsersAudioChannel, string transcodingExtraInfo, string metaData, string watermarkRtcImageUrl, int watermarkRtcImageX, int watermarkRtcImageY, int watermarkRtcImageWidth, int watermarkRtcImageHeight, string backgroundImageRtcImageUrl, int backgroundImageRtcImageX, int backgroundImageRtcImageY, int backgroundImageRtcImageWidth, int backgroundImageRtcImageHeight, int audioSampleRate, int audioBitrate, int audioChannels, int audioCodecProfile);
+        protected static extern int setLiveTranscoding(int width, int height, int videoBitrate, int videoFramerate, bool lowLatency, int videoGroup, int video_codec_profile, uint backgroundColor, uint userCount, string transcodingUserInfo, string transcodingExtraInfo, string metaData, string watermarkRtcImageUrl, int watermarkRtcImageX, int watermarkRtcImageY, int watermarkRtcImageWidth, int watermarkRtcImageHeight, string backgroundImageRtcImageUrl, int backgroundImageRtcImageX, int backgroundImageRtcImageY, int backgroundImageRtcImageWidth, int backgroundImageRtcImageHeight, int audioSampleRate, int audioBitrate, int audioChannels, int audioCodecProfile);
         // video manager
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern bool createAVideoDeviceManager();
@@ -715,6 +730,18 @@ namespace agora_gaming_rtc
         protected static extern int setDefaultEngineSettings();
 
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int adjustUserPlaybackSignalVolume(uint uid, int volume);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setMultiChannelWant(bool multiChannelWant);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern bool getMultiChannelWanted();
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setAudioMixingPitch(int pitch);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern void initEventOnEngineCallback(OnJoinChannelSuccessHandler OnJoinChannelSuccess, 
                                       OnReJoinChannelSuccessHandler OnReJoinChannelSuccess, 
                                       OnConnectionLostHandler OnConnectionLost, 
@@ -744,7 +771,7 @@ namespace agora_gaming_rtc
                                       OnStreamUnpublishedHandler onStreamUnpublished,
                                       OnStreamPublishedHandler onStreamPublished,
                                       OnStreamMessageErrorHandler onStreamMessageError,
-                                      OnStreamMessageHandler onStreamMessage,
+                                      EngineEventOnStreamMessageHandler onStreamMessage,
                                       OnConnectionBannedHandler onConnectionBanned,
                                       OnVideoStoppedHandler OnVideoStopped,
                                       OnTokenPrivilegeWillExpireHandler onTokenPrivilegeWillExpire,
@@ -787,7 +814,39 @@ namespace agora_gaming_rtc
                                       EngineEventOnRemoteAudioStateChangedHandler onRemoteAudioStateChanged,
                                       EngineEventOnLocalAudioStatsHandler onLocalAudioStats,
                                       EngineEventOnChannelMediaRelayStateChangedHandler onChannelMediaRelayStateChanged,
-                                      EngineEventOnChannelMediaRelayEventHandler onChannelMediaRelayEvent);
+                                      EngineEventOnChannelMediaRelayEventHandler onChannelMediaRelayEvent,
+                                      EngineEventOnFacePositionChanged onFacePositionChanged);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern void initChannelEventCallback(IntPtr channel, ChannelOnWarningHandler onWarning,
+                                        ChannelOnErrorHandler onError,
+                                        ChannelOnJoinChannelSuccessHandler onJoinChannelSuccess,
+                                        ChannelOnReJoinChannelSuccessHandler onRejoinChannelSuccess,
+                                        ChannelEngineEventOnLeaveChannelHandler onLeaveChannel,
+                                        ChannelOnClientRoleChangedHandler onClientRoleChanged,
+                                        ChannelOnUserJoinedHandler onUserJoined,
+                                        ChannelOnUserOffLineHandler onUserOffline,
+                                        ChannelOnConnectionLostHandler onConnectionLost,
+                                        ChannelOnRequestTokenHandler onRequestToken,
+                                        ChannelOnTokenPrivilegeWillExpireHandler onTokenPrivilegeWillExpire,
+                                        ChannelEngineEventOnRtcStatsHandler onRtcStats,
+                                        ChannelOnNetworkQualityHandler onNetworkQuality,
+                                        ChannelEngineEventOnRemoteVideoStatsHandler onRemoteVideoStats,
+                                        ChannelEngineEventOnRemoteAudioStatsHandler onRemoteAudioStats,
+                                        ChannelOnRemoteAudioStateChangedHandler onRemoteAudioStateChanged,
+                                        ChannelOnActiveSpeakerHandler onActiveSpeaker,
+                                        ChannelOnVideoSizeChangedHandler onVideoSizeChanged,
+                                        ChannelOnRemoteVideoStateChangedHandler onRemoteVideoStateChanged,
+                                        ChannelOnStreamMessageHandler onStreamMessage, 
+                                        ChannelOnStreamMessageErrorHandler onStreamMessageError,
+                                        ChannelOnMediaRelayStateChangedHandler onMediaRelayStateChanged,
+                                        ChannelOnMediaRelayEventHandler onMediaRelayEvent,
+                                        ChannelOnRtmpStreamingStateChangedHandler onRtmpStreamingStateChanged,
+                                        ChannelOnTranscodingUpdatedHandler onTranscodingUpdated,
+                                        ChannelOnStreamInjectedStatusHandler onStreamInjectedStatus, 
+                                        ChannelOnRemoteSubscribeFallbackToAudioOnlyHandler onRemoteSubscribeFallbackToAudioOnly,
+                                        ChannelOnConnectionStateChangedHandler onConnectionStateChanged,
+                                        ChannelOnLocalPublishFallbackToAudioOnlyHandler onLocalPublishFallbackToAudioOnly);
 
         // audio and video raw data
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
@@ -816,6 +875,131 @@ namespace agora_gaming_rtc
         
         [DllImport(MyLibName, CharSet = CharSet.Ansi)]
         protected static extern void initEventOnMetaDataCallback(EngineEventOnMediaMetaDataReceived onMetadataReceived, EngineEventOnReadyToSendMetadata onReadyToSendMetadata, EngineEventOnGetMaxMetadataSize onGetMaxMetadataSize);
-        #endregion engine callbacks   
+
+        // 3.0 multi channel
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern IntPtr createChannel(string channelId);
+      
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int ReleaseChannel(IntPtr channel);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int joinChannel2(IntPtr channel, string token, string info, uint uid, bool autoSubscribeAudio, bool autoSubscribeVideo);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int joinChannelWithUserAccount2(IntPtr channel, string token, string userAccount, bool autoSubscribeAudio, bool autoSubscribeVideo);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int leaveChannel2(IntPtr channel);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int publish(IntPtr channel);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int unpublish(IntPtr channel);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern IntPtr channelId(IntPtr channel);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern IntPtr getCallId2(IntPtr channel);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int renewToken2(IntPtr channel, string token);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setEncryptionSecret2(IntPtr channel, string secret);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setEncryptionMode2(IntPtr channel, string encryptionMode);
+        
+        // virtual int registerPacketObserver(void *channel, IPacketObserver* observer);
+        
+        // virtual int registerMediaMetadataObserver(void *channel, IMetadataObserver *observer, IMetadataObserver::METADATA_TYPE type);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setClientRole2(IntPtr channel, int role);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setRemoteUserPriority2(IntPtr channel, uint uid, int userPriority);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setRemoteVoicePosition2(IntPtr channel, uint uid, double pan, double gain);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setRemoteRenderMode2(IntPtr channel, uint userId, int renderMode, int mirrorMode);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setDefaultMuteAllRemoteAudioStreams2(IntPtr channel, bool mute);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setDefaultMuteAllRemoteVideoStreams2(IntPtr channel, bool mute);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int muteAllRemoteAudioStreams2(IntPtr channel, bool mute);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int adjustUserPlaybackSignalVolume2(IntPtr channel, uint userId, int volume);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int muteRemoteAudioStream2(IntPtr channel, uint userId, bool mute);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int muteAllRemoteVideoStreams2(IntPtr channel, bool mute);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int muteRemoteVideoStream2(IntPtr channel, uint userId, bool mute);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setRemoteVideoStreamType2(IntPtr channel, uint userId, int streamType);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setRemoteDefaultVideoStreamType2(IntPtr channel, int streamType);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int createDataStream2(IntPtr channel, bool reliable, bool ordered);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int sendStreamMessage2(IntPtr channel, int streamId, string data, Int64 length);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int addPublishStreamUrl2(IntPtr channel, string url, bool transcodingEnabled);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int removePublishStreamUrl2(IntPtr channel, string url);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int setLiveTranscoding2(IntPtr channel, int width, int height, int videoBitrate, int videoFramerate, bool lowLatency, int videoGroup, int video_codec_profile, uint backgroundColor, uint userCount, string transcodingUserInfo, string transcodingExtraInfo, string metaData, string watermarkRtcImageUrl, int watermarkRtcImageX, int watermarkRtcImageY, int watermarkRtcImageWidth, int watermarkRtcImageHeight, string backgroundImageRtcImageUrl, int backgroundImageRtcImageX, int backgroundImageRtcImageY, int backgroundImageRtcImageWidth, int backgroundImageRtcImageHeight, int audioSampleRate, int audioBitrate, int audioChannels, int audioCodecProfile);
+       
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int addInjectStreamUrl2(IntPtr channel, string url, int width, int height, int videoGop, int videoFramerate, int videoBitrate, int audioSampleRate, int audioBitrate, int audioChannels);
+       
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int removeInjectStreamUrl2(IntPtr channel, string url);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int startChannelMediaRelay2(IntPtr channel, string srcChannelName, string srcToken , uint srcUid, string destChannelName, string destToken, uint destUid, int destCount);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int updateChannelMediaRelay2(IntPtr channel, string srcChannelName, string srcToken , uint srcUid, string destChannelName, string destToken, uint destUid, int destCount);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int stopChannelMediaRelay2(IntPtr channel);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int getConnectionState2(IntPtr channel);
+                
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern void addUserVideoInfo2(string channelId, uint _userId, uint _textureId);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern void removeUserVideoInfo2(string channelId, uint _userId);
+        
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int updateVideoRawData2(IntPtr data, string channelId, uint uid);
+
+        [DllImport(MyLibName, CharSet = CharSet.Ansi)]
+        protected static extern int enableFaceDetection(bool enable);
+        #endregion engine callbacks
     }
 }

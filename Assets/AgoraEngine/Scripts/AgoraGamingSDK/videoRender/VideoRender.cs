@@ -23,7 +23,8 @@ namespace agora_gaming_rtc
          // load data to texture
         public abstract int UpdateTexture(int tex, uint uid, IntPtr data, ref int width, ref int height);
 
-        public abstract int UpdateVideoRawData(uint uid, IntPtr data, ref int width, ref int height);    
+        public abstract int UpdateVideoRawData(uint uid, IntPtr data, ref int width, ref int height);   
+
         /**
          * create Native texture and return textureId.
          */
@@ -34,9 +35,17 @@ namespace agora_gaming_rtc
          */
         public abstract void DeleteTexture(int tex);
 
-        public abstract int AddUserVideoInfo(uint userId, uint textureId);
+        public abstract void AddUserVideoInfo(uint userId, uint textureId);
 
-        public abstract int RemoveUserVideoInfo(uint _userId);
+        public abstract void RemoveUserVideoInfo(uint _userId);
+
+        public abstract void AddUserVideoInfo(string channelId, uint _userId, uint _textureId);
+        
+        public abstract void RemoveUserVideoInfo(string channelId, uint _userId);
+
+        public abstract int UpdateVideoRawData(string channelId, uint uid, IntPtr data, ref int width, ref int height);
+
+        public abstract bool GetMultiChannelWanted();
     }
 
     public sealed class VideoRender : IVideoRender
@@ -88,7 +97,21 @@ namespace agora_gaming_rtc
             width = (int)rc >> 16;
             height = (int)(rc & 0xffff);
             return 0;
-        }  
+        }
+
+        public override int UpdateVideoRawData(string channelId, uint uid, IntPtr data, ref int width, ref int height)
+        {
+            if (_rtcEngine == null)
+                return (int)ERROR_CODE.ERROR_NOT_INIT_ENGINE;
+
+            int rc = IRtcEngineNative.updateVideoRawData2(data, channelId, uid);
+            if (rc == -1)
+                return -1;
+
+            width = (int)rc >> 16;
+            height = (int)(rc & 0xffff);
+            return 0;
+        } 
 
          // load data to texture
         public override int UpdateTexture(int tex, uint uid, IntPtr data, ref int width, ref int height)
@@ -104,20 +127,36 @@ namespace agora_gaming_rtc
             return 0;
         }
 
-        public override int AddUserVideoInfo(uint userId, uint textureId)
+        public override void AddUserVideoInfo(uint userId, uint textureId)
         {
             if (_rtcEngine == null)
-                return (int)ERROR_CODE.ERROR_NOT_INIT_ENGINE;
+                    return;
 
-            return IRtcEngineNative.addUserVideoInfo(userId, textureId);
+            IRtcEngineNative.addUserVideoInfo(userId, textureId);
         }
 
-        public override int RemoveUserVideoInfo(uint _userId)
+        public override void RemoveUserVideoInfo(uint _userId)
         {
             if (_rtcEngine == null)
-                return (int)ERROR_CODE.ERROR_NOT_INIT_ENGINE;
+                return;
 
-            return IRtcEngineNative.removeUserVideoInfo(_userId);
+            IRtcEngineNative.removeUserVideoInfo(_userId);
+        }
+
+        public override void AddUserVideoInfo(string channelId, uint _userId, uint _textureId)
+        {
+           if (_rtcEngine == null)
+                return;
+
+            IRtcEngineNative.addUserVideoInfo2(channelId, _userId, _textureId);
+        }
+
+        public override void RemoveUserVideoInfo(string channelId, uint _userId)
+        {
+           if (_rtcEngine == null)
+                return;
+
+            IRtcEngineNative.removeUserVideoInfo2(channelId, _userId);
         }
 
         public override int GenerateNativeTexture()
@@ -134,6 +173,14 @@ namespace agora_gaming_rtc
                 return;
                 
             IRtcEngineNative.deleteTexture(tex);
+        }
+
+        public override bool GetMultiChannelWanted()
+        {
+            if (_rtcEngine == null)
+                return false;
+
+            return IRtcEngineNative.getMultiChannelWanted();
         }
     }
 }

@@ -207,7 +207,7 @@ namespace agora_gaming_rtc
         /** Retrieves the volume of the current audio playback device.
         * 
         * @return
-        * - - The volume of the current audio playback device, if this method call succeeds.
+        * - The volume of the current audio playback device, if this method call succeeds.
         * - < 0: Failure.
         */
         public override int GetAudioPlaybackDeviceVolume()
@@ -221,8 +221,8 @@ namespace agora_gaming_rtc
         /** Sets whether to stop audio playback.
         * 
         * @param mute Sets whether to stop audio playback.
-        * -true: Stops.
-        * -false: Doesn't stop.
+        * - true: Stops.
+        * - false: Doesn't stop.
         * 
         * @return
         * - 0: Success.
@@ -239,8 +239,8 @@ namespace agora_gaming_rtc
         /** Retrieves the status of the current audio playback device.
         * 
         * @return Whether the current audio playback device stops audio playback.
-        * -true: Stops.
-        * -false: Doesn't stop.
+        * - true: Stops.
+        * - false: Doesn't stop.
         */
         public override bool IsAudioPlaybackDeviceMute()
         {

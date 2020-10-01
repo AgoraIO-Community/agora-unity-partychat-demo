@@ -57,8 +57,10 @@ namespace agora_gaming_rtc
 
         /** Create a VideoDeviceManager instance.
         *
-        * @note Ensure that you call {@link agora_gaming_rtc.VideoDeviceManager.ReleaseAVideoDeviceManager ReleaseAVideoDeviceManager} to release this instance after calling this method.
-        * 
+        * @note 
+        * - Ensure that you call this method after {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo} or {@link agora_gaming_rtc.IRtcEngine.EnableVideoObserver EnableVideoObserver}.
+        * - Ensure that you call {@link agora_gaming_rtc.VideoDeviceManager.ReleaseAVideoDeviceManager ReleaseAVideoDeviceManager} to release this instance after calling this method.
+        *
         * @return 
         * - true: Success.
         * - false: Failure.

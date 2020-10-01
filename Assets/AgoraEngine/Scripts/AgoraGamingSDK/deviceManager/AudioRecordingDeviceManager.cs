@@ -188,7 +188,7 @@ namespace agora_gaming_rtc
         /** Retrieves the volume of the current audio recording device.
         * 
         * @return
-        * - The volume of the current audio recording device, if this method call succeeds.
+        * - &ge; 0: The volume of the current audio recording device, if this method call succeeds.
         * - < 0: Failure.
         */
         public override int GetAudioRecordingDeviceVolume()
@@ -202,8 +202,8 @@ namespace agora_gaming_rtc
         /** Sets whether to stop audio recording.
         * 
         * @param mute Sets whether to stop audio recording.
-        * -true: Stops.
-        * -false: Doesn't stop.
+        * - true: Stops.
+        * - false: Doesn't stop.
         * 
         * @return
         * - 0: Success.
@@ -220,8 +220,8 @@ namespace agora_gaming_rtc
         /** Gets the status of the current audio recording device.
         * 
         * @return Whether the current audio recording device stops audio recording.
-        * -true: Stops.
-        * -false: Doesn't stop.
+        * - true: Stops.
+        * - false: Doesn't stop.
         */
         public override bool IsAudioRecordingDeviceMute()
 		{

@@ -53,8 +53,8 @@ namespace agora_gaming_rtc
         public delegate int OnGetMaxMetadataSizeHandler();
         public OnGetMaxMetadataSizeHandler _OnGetMaxMetadataSize;
 
-        private static IRtcEngine _irtcEngine;
-        public static MetadataObserver _metaDataObserver;
+        private static IRtcEngine _irtcEngine = null;
+        public static MetadataObserver _metaDataObserver = null;
 
         private MetadataObserver(IRtcEngine irtcEngine)
         {
@@ -71,7 +71,7 @@ namespace agora_gaming_rtc
 
         public static void releaseInstance()
         {
-            _irtcEngine = null;
+            _metaDataObserver = null;
         }
 
         public void SetEngine(IRtcEngine irtcEngine)

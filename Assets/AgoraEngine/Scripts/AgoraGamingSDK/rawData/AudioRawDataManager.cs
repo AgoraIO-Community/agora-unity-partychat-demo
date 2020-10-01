@@ -25,8 +25,8 @@ namespace agora_gaming_rtc
     /** The definition of AudioRawDataManager. */
     public sealed class AudioRawDataManager : IAudioRawDataManager
     {
-        private static IRtcEngine _irtcEngine;
-        private static AudioRawDataManager _audioRawDataManagerInstance;
+        private static IRtcEngine _irtcEngine = null;
+        private static AudioRawDataManager _audioRawDataManagerInstance = null;
         /** Retrieves the recorded audio frame.
          * 
          * The SDK triggers this callback once every 10 ms.
@@ -244,7 +244,7 @@ namespace agora_gaming_rtc
          *   - `OnPlaybackAudioFrameHandler`: The SDK sends the audio data to the app once every 10 ms. Any delay in processing the audio frames may result in audio jitter.
          *   - `PullAudioFrame`: The app pulls the remote audio data. After setting the audio data parameters, the SDK adjusts the frame buffer and avoids problems caused by jitter in the external audio playback.
          * 
-         * @param audioBuffer The data buffer of the audio frame. When the audio frame uses a stereo channel, the data buffer is interleaved. The size of the data buffer is as follows: `audioBuffer` = `samples` × `channels` × `bytesPerSample`.
+         * @param audioBuffer The data buffer of the audio frame. When the audio frame uses a stereo channel, the data buffer is interleaved. The size of the data buffer is as follows: `audioBuffer` = `samples` &times; `channels` &times; `bytesPerSample`.
          * @param type The type of the audio frame. See #AUDIO_FRAME_TYPE.
          * @param samples The number of samples per channel in the audio frame.
          * @param bytesPerSample The number of bytes per audio sample, which is usually 16-bit (2-byte).

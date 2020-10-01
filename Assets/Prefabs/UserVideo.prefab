@@ -80,7 +80,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1272405541118282648}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 318a20438a87047f994fba414d853cc5, type: 3}
+  m_Script: {fileID: 11500000, guid: 4131f6398f931428da10379c3ec56ea8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isMultiChannelWant: 0
+  _enableFlipHorizontal: 0
+  _enableFlipVertical: 0
+  videoFps: 30
   VideoSurfaceType: 0

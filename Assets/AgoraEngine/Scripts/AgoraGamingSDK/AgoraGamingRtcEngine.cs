@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Text;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Collections.Generic;
@@ -121,7 +122,7 @@ namespace agora_gaming_rtc
         public OnCameraFocusAreaChangedHandler OnCameraFocusAreaChanged;
 
         public OnCameraExposureAreaChangedHandler OnCameraExposureAreaChanged;
-
+       
         public OnRemoteAudioMixingBeginHandler OnRemoteAudioMixingBegin;
 
         public OnRemoteAudioMixingEndHandler OnRemoteAudioMixingEnd;
@@ -133,7 +134,7 @@ namespace agora_gaming_rtc
         public OnRemoteVideoTransportStatsHandler OnRemoteVideoTransportStats;
 
         public OnRemoteAudioTransportStatsHandler OnRemoteAudioTransportStats;
-
+    
         public OnTranscodingUpdatedHandler OnTranscodingUpdated;
 
         public OnAudioDeviceVolumeChangedHandler OnAudioDeviceVolumeChanged;
@@ -168,6 +169,7 @@ namespace agora_gaming_rtc
 
         public OnChannelMediaRelayStateChangedHandler OnChannelMediaRelayStateChanged;
 
+        public OnFacePositionChangedHandler OnFacePositionChanged;
         #endregion  set callback here for user
 
         private readonly AudioEffectManagerImpl mAudioEffectM;
@@ -178,14 +180,15 @@ namespace agora_gaming_rtc
         private readonly VideoRawDataManager videoRawDataManager;
         private readonly VideoRender videoRender;
         private const string agoraGameObjectName = "agora_engine_CallBackGamObject";
-        private static GameObject agoraGameObject = null;
+        // private static GameObject agoraGameObject = null;
+        // private static AgoraCallbackQueue ._AgoraCallbackObject = null;
+        private AgoraCallbackObject _AgoraCallbackObject = null;
 
         private IRtcEngine(string appId)
         {
             InitGameObject();
             InitEngineCallback();
             bool initSuccess = IRtcEngineNative.createEngine(appId);
-            Debug.Assert(!initSuccess, "Agora IRC engine init unsuccessful!");
             mAudioEffectM = AudioEffectManagerImpl.GetInstance(this);
             audioRecordingDeviceManager = AudioRecordingDeviceManager.GetInstance(this);
             audioPlaybackDeviceManager = AudioPlaybackDeviceManager.GetInstance(this);
@@ -195,23 +198,29 @@ namespace agora_gaming_rtc
             videoRender = VideoRender.GetInstance(this);
         }
 
-        private void InitGameObject()
+        private IRtcEngine(RtcEngineConfig engineConfig)
         {
-            agoraGameObject = new GameObject(agoraGameObjectName);
-            agoraGameObject.AddComponent<AgoraCallbackQueue>();
-            GameObject.DontDestroyOnLoad(agoraGameObject);
-            agoraGameObject.hideFlags = HideFlags.HideInHierarchy;
+            InitGameObject();
+            InitEngineCallback();
+            bool initSuccess = IRtcEngineNative.createEngine2(engineConfig.appId, (uint)engineConfig.areaCode);
+            mAudioEffectM = AudioEffectManagerImpl.GetInstance(this);
+            audioRecordingDeviceManager = AudioRecordingDeviceManager.GetInstance(this);
+            audioPlaybackDeviceManager = AudioPlaybackDeviceManager.GetInstance(this);
+            videoDeviceManager = VideoDeviceManager.GetInstance(this);
+            audioRawDataManager = AudioRawDataManager.GetInstance(this);
+            videoRawDataManager = VideoRawDataManager.GetInstance(this);
+            videoRender = VideoRender.GetInstance(this);       
         }
 
-        private static void DeInitGameObject()
+        private void InitGameObject()
         {
-            GameObject agoraGameObject = GameObject.Find(agoraGameObjectName);
-            if (!ReferenceEquals(agoraGameObject, null))
-            {
-                AgoraCallbackQueue.Current.ClearQueue();
-                GameObject.Destroy(agoraGameObject);
-                agoraGameObject = null;
-            }
+            _AgoraCallbackObject = new AgoraCallbackObject(agoraGameObjectName);
+        }
+
+        private void DeInitGameObject()
+        {
+            _AgoraCallbackObject.Release();
+            _AgoraCallbackObject = null;
         }
 
         public string doFormat(string format, params object[] args)
@@ -219,27 +228,25 @@ namespace agora_gaming_rtc
             return string.Format(CultureInfo.InvariantCulture, format, args);
         }
 
-        /** Gets the SDK version.
-        *
-        * @return The version of the current SDK in the string format. For example, 2.9.1.
-        */
+         /** Gets the SDK version.
+         *
+         * @return The version of the current SDK in the string format. For example, 2.9.1.
+         */
         public static string GetSdkVersion()
         {
             return Marshal.PtrToStringAnsi(IRtcEngineNative.getSdkVersion());
         }
 
-        /** Sets the channel profile.
+        /** Sets the channel profile of the Agora IRtcEngine.
          *
-         * The SDK needs to know the application scenario to set the appropriate channel profile to apply different optimization methods.
+         * The Agora IRtcEngine differentiates channel profiles and applies optimization algorithms accordingly.
+         * For example, it prioritizes smoothness and low latency for a video call, and prioritizes video quality for a video broadcast.
          *
-         * @note 
-         * - This method applies only to the Live-broadcast profile.
-         * - Users in the same channel must use the same channel profile.
-         * - Before calling this method to set a new channel profile, {@link agora_gaming_rtc.IRtcEngine.Destroy Destroy} the current engine and create a new engine using {@link agora_gaming_rtc.IRtcEngine.getEngine getEngine}.
-         * - Call this method before a user {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey joins a channel} because you cannot configure the channel profile when the channel is in use.
-         * - In the Communication profile, the Agora SDK supports encoding only in raw data, not in texture.
+         * @warning
+         * - To ensure the quality of real-time communication, we recommend that all users in a channel use the same channel profile.
+         * - Call this method before calling {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey joins a channel}. You cannot set the channel profile once you have joined the channel.
          *
-         * @param profile Sets the channel profile. See {@link agora_gaming_rtc.CHANNEL_PROFILE CHANNEL_PROFILE}.
+         * @param profile The channel profile of the Agora IRtcEngine. See {@link agora_gaming_rtc.CHANNEL_PROFILE CHANNEL_PROFILE}.
          *
          * @return
          * - 0: Success.
@@ -254,19 +261,19 @@ namespace agora_gaming_rtc
          * 
          * This method can be used to switch the user role in a live broadcast after the user joins a channel.
          * 
-         * In the Live Broadcast profile, when a user switches user roles after joining a channel, a successful `setClientRole` method call triggers the following callbacks:
+         * In the Live Broadcast profile, when a user switches user roles after joining a channel, a successful `SetClientRole` method call triggers the following callbacks:
          * - The local client: {@link agora_gaming_rtc.OnClientRoleChangedHandler OnClientRoleChangedHandler}
          * - The remote client: {@link agora_gaming_rtc.OnUserJoinedHandler OnUserJoinedHandler} or {@link agora_gaming_rtc.OnUserOfflineHandler OnUserOfflineHandler} (BECOME_AUDIENCE)
          * 
          * @note This method applies only to the Live-broadcast profile.
          * 
-         * @param role Sets the role of the user. See {@link agora_gaming_rtc.CLIENT_ROLE CLIENT_ROLE}.
+         * @param role Sets the role of the user. See {@link agora_gaming_rtc.CLIENT_ROLE_TYPE CLIENT_ROLE_TYPE}.
          * 
          * @return
          * - 0: Success.
          * - < 0: Failure.
          */
-        public int SetClientRole(CLIENT_ROLE role)
+        public int SetClientRole(CLIENT_ROLE_TYPE role)
         {
             return IRtcEngineNative.setClientRole((int)role);
         }
@@ -342,10 +349,11 @@ namespace agora_gaming_rtc
          *   - `ERR_NOT_READY(-3)`
          *   - `ERR_REFUSED(-5)`
          */
-        public int JoinChannel(string channelName, string info, uint uid)
+        public int JoinChannel(string channelName, string info = "", uint uid = 0)
         {
             return JoinChannelByKey(null, channelName, info, uid);
         }
+
         /** Allows a user to join a channel with token.
          * 
          * Users in the same channel can talk to each other, and multiple users in the same channel can start a group chat. Users with different App IDs cannot call each other.
@@ -380,7 +388,7 @@ namespace agora_gaming_rtc
          *   - `ERR_NOT_READY(-3)`
          *   - `ERR_REFUSED(-5)`
          */
-        public int JoinChannelByKey(string channelKey, string channelName, string info, uint uid)
+        public int JoinChannelByKey(string channelKey, string channelName, string info = "", uint uid = 0)
         {
             return IRtcEngineNative.joinChannel(channelKey, channelName, info, uid);
         }
@@ -389,7 +397,7 @@ namespace agora_gaming_rtc
          * 
          * The `token` expires after a period of time once the token schema is enabled when:
          * - The SDK triggers the {@link agora_gaming_rtc.OnTokenPrivilegeWillExpireHandler OnTokenPrivilegeWillExpireHandler} callback, or
-         * - The {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} reports CONNECTION_CHANGED_TOKEN_EXPIRED(9).
+         * - The {@link agora_gaming_rtc.OnConnectionStateChangedHandler OnConnectionStateChangedHandler} reports {@link agora_gaming_rtc.CONNECTION_CHANGED_REASON_TYPE#CONNECTION_CHANGED_TOKEN_EXPIRED CONNECTION_CHANGED_TOKEN_EXPIRED(9)}.
          * 
          * The application should call this method to get the new `token`. Failure to do so will result in the SDK disconnecting from the server.
          * 
@@ -406,27 +414,27 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.renewToken(token);
         }
 
-        /** Allows a user to leave a channel, such as hanging up or exiting a call.
-        * 
-        * After joining a channel, the user must call the `LeaveChannel` method to end the call before joining another channel.
-        * 
-        * This method returns 0 if the user leaves the channel and destroys all resources related to the call.
-        * 
-        * This method call is asynchronous, and the user has not left the channel when the method call returns. Once the user leaves the channel, the SDK triggers the {@link agora_gaming_rtc.OnLeaveChannelHandler OnLeaveChannelHandler} callback.
-        * 
-        * A successful `LeaveChannel` method call triggers the following callbacks:
-        * - The local client: `OnLeaveChannelHandler`
-        * - The remote client: {@link agora_gaming_rtc.OnUserOfflineHandler OnUserOfflineHandler}, if the user leaving the channel is in the Communication channel, or is a BROADCASTER in the Live Broadcast profile.
-        * 
-        * @note
-        * - If you call the {@link agora_gaming_rtc.IRtcEngine.Destroy Destroy} method immediately after the `LeaveChannel` method, the `LeaveChannel` process interrupts, and the `OnLeaveChannelHandler` callback is not triggered.
-        * - If you call the `LeaveChannel` method during a CDN live streaming, the SDK triggers the {@link agora_gaming_rtc.IRtcEngine.RemovePublishStreamUrl RemovePublishStreamUrl} method.
-        * 
-        * 
-        * @return
-        * - 0: Success.
-        * - < 0: Failure.
-        */
+         /** Allows a user to leave a channel, such as hanging up or exiting a call.
+         * 
+         * After joining a channel, the user must call the `LeaveChannel` method to end the call before joining another channel.
+         * 
+         * This method returns 0 if the user leaves the channel and destroys all resources related to the call.
+         * 
+         * This method call is asynchronous, and the user has not left the channel when the method call returns. Once the user leaves the channel, the SDK triggers the {@link agora_gaming_rtc.OnLeaveChannelHandler OnLeaveChannelHandler} callback.
+         * 
+         * A successful `LeaveChannel` method call triggers the following callbacks:
+         * - The local client: `OnLeaveChannelHandler`
+         * - The remote client: {@link agora_gaming_rtc.OnUserOfflineHandler OnUserOfflineHandler}, if the user leaving the channel is in the Communication channel, or is a BROADCASTER in the Live Broadcast profile.
+         * 
+         * @note
+         * - If you call the {@link agora_gaming_rtc.IRtcEngine.Destroy Destroy} method immediately after the `LeaveChannel` method, the `LeaveChannel` process interrupts, and the `OnLeaveChannelHandler` callback is not triggered.
+         * - If you call the `LeaveChannel` method during a CDN live streaming, the SDK triggers the {@link agora_gaming_rtc.IRtcEngine.RemovePublishStreamUrl RemovePublishStreamUrl} method.
+         * 
+         * 
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
         public int LeaveChannel()
         {
             return IRtcEngineNative.leaveChannel(); // leave uncondionally
@@ -486,7 +494,7 @@ namespace agora_gaming_rtc
          * 
          * 
          * @return
-         * - The current call ID, if this method call succeeds.
+         * - &ge; 0: The current call ID, if this method call succeeds.
          * - < 0: Failure.
          */
         public string GetCallId()
@@ -511,7 +519,7 @@ namespace agora_gaming_rtc
          * - 0: Success.
          * - < 0: Failure.
          */
-        public int Rate(string callId, int rating, string desc)
+        public int Rate(string callId, int rating, string desc = "")
         {
             return IRtcEngineNative.rate(callId, rating, desc);
         }
@@ -525,7 +533,7 @@ namespace agora_gaming_rtc
          * - 0: Success.
          * - < 0: Failure.        
          */
-        public int Complain(string callId, string desc)
+        public int Complain(string callId, string desc = "")
         {
             return IRtcEngineNative.complain(callId, desc);
         }
@@ -591,7 +599,7 @@ namespace agora_gaming_rtc
 
         /** Stops/Resumes receiving all remote users' audio streams.
          *
-         * @param mute Sets whether to receive/stop receiving all remote users' audio streams.
+         * @param mute Sets whether to receive or stop receiving all remote users' audio streams.
          * - true: Stops receiving all remote users' audio streams.
          * - false: (Default) Receives all remote users' audio streams.
          * 
@@ -653,21 +661,21 @@ namespace agora_gaming_rtc
         *
         * This method sets whether the received audio is routed to the earpiece or speakerphone by default before joining a channel. If a user does not call this method, the audio is routed to the earpiece by default. If you need to change the default audio route after joining a channel, call the {@link agora_gaming_rtc.IRtcEngine.SetEnableSpeakerphone SetEnableSpeakerphone} method.
         * 
-        * The default setting for each mode:
-        * - Voice: Earpiece.
-        * - Video: Speakerphone. If a user who is in the Communication profile calls the {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} method or if the user calls the {@link agora_gaming_rtc.IRtcEngine.MuteLocalVideoStream MuteLocalVideoStream} and {@link agora_gaming_rtc.IRtcEngine.MuteAllRemoteVideoStreams MuteAllRemoteVideoStreams} methods, the default audio route switches back to the earpiece automatically.
+        * The default setting for each profile:
+        * - Communication: 
+        *   - In a voice call, the default audio route is the earpiece. 
+        *   - In a video call, the default audio route is the speakerphone. If a user who is in the Communication profile calls the {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} method or if the user calls the {@link agora_gaming_rtc.IRtcEngine.MuteLocalVideoStream MuteLocalVideoStream} and {@link agora_gaming_rtc.IRtcEngine.MuteAllRemoteVideoStreams MuteAllRemoteVideoStreams} methods, the default audio route switches back to the earpiece automatically.
         * - Live Broadcast: Speakerphone.
-        * - Gaming Voice: Speakerphone.
         * 
         * @note 
         * - This method is for Android and iOS only.
-        * - This method only works in audio mode.
+        * - This method is applicable only to the Communication profile.
+        * - For iOS, this method only works in a voice call.
         * - Call this method before calling the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} method.
-        * - Regardless of whether the audio is routed to the speakerphone or earpiece by default, once a headset is plugged in or Bluetooth device is connected, the default audio route changes. The default audio route switches to the earpiece once removing the headset or disconnecting the Bluetooth device.
         * 
         * @param speakerphone Sets the default audio route:
-        * - true: Speakerphone.
-        * - false: (Default) Earpiece.
+        * - true: Route the audio to the speakerphone. If the playback device connects to the earpiece or Bluetooth, the audio cannot be routed to the speakerphone.
+        * - false: (Default) Route the audio to the earpiece. If a headset is plugged in, the audio is routed to the headset.
         * 
         * @return
         * - 0: Success.
@@ -704,9 +712,9 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.switchCamera();
         }
 
-        /** **DEPRECATED** Sets the video profile.
+        /** Sets the video profile.
         * 
-        * This method is deprecated as of v2.3. Use the {@link agora_gaming_rtc.IRtcEngine.SetVideoEncoderConfiguration SetVideoEncoderConfiguration} method instead.
+        * @deprecated This method is deprecated as of v2.3. Use the {@link agora_gaming_rtc.IRtcEngine.SetVideoEncoderConfiguration SetVideoEncoderConfiguration} method instead.
         * 
         * Each video profile includes a set of parameters, such as the resolution, frame rate, and bitrate. If the camera device does not support the specified resolution, the SDK automatically chooses a suitable camera resolution, keeping the encoder resolution specified by the `setVideoProfile` method.
         * 
@@ -724,7 +732,7 @@ namespace agora_gaming_rtc
         * - 0: Success.
         * - < 0: Failure.
         */
-        public int SetVideoProfile(VIDEO_PROFILE_TYPE profile, bool swapWidthAndHeight)
+        public int SetVideoProfile(VIDEO_PROFILE_TYPE profile, bool swapWidthAndHeight = false)
         {
             return IRtcEngineNative.setVideoProfile((int)profile, swapWidthAndHeight);
         }
@@ -737,7 +745,7 @@ namespace agora_gaming_rtc
         * - When set to `true`, this method does not disable the camera which does not affect the retrieval of the local video streams. This method executes faster than the {@link agora_gaming_rtc.IRtcEngine.EnableLocalVideo EnableLocalVideo} method which controls the sending of the local video stream.
         * - If you call {@link agora_gaming_rtc.IRtcEngine.SetChannelProfile SetChannelProfile} after this method, the SDK resets whether or not to mute the local video according to the channel profile and user role. Therefore, we recommend calling this method after the `SetChannelProfile` method.
         * 
-        * @param mute Sets whether to send/stop sending the local video stream:
+        * @param mute Sets whether to send or stop sending the local video stream:
         * - true: Stop sending the local video stream.
         * - false: (Default) Send the local video stream.
         * 
@@ -750,9 +758,9 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.muteLocalVideoStream(mute);
         }
 
-        /** Stops/Resumes receiving all video stream from a specified remote user.
+        /** Stops/Resumes receiving all remote video streams.
         * 
-        * @param mute Sets whether to receive/stop receiving all remote users' video streams:
+        * @param mute Sets whether to receive or stop receiving all remote users' video streams:
         * - true: Stop receiving all remote users' video streams.
         * - false: (Default) Receive all remote users' video streams.
         * 
@@ -770,7 +778,7 @@ namespace agora_gaming_rtc
         * @note If you called the {@link agora_gaming_rtc.IRtcEngine.MuteAllRemoteVideoStreams MuteAllRemoteVideoStreams} method and set `mute` as `true` to stop receiving all remote video streams, call the `MuteAllRemoteVideoStreams` method and set `mute` as `false` before calling this method.
         * 
         * @param uid User ID of the specified remote user.
-        * @param mute Sets whether to stop/resume receiving the video stream from a specified remote user:
+        * @param mute Sets whether to stop or resume receiving the video stream from a specified remote user:
         * - true: Stop receiving the specified remote user's video stream.
         * - false: (Default) Receive the specified remote user's video stream.
         * 
@@ -802,7 +810,7 @@ namespace agora_gaming_rtc
 
         /** Sets the built-in encryption mode.
          * 
-         * The Agora SDK supports built-in encryption, which is set to the `aes-128-xts` mode by default. Call this method to use other encryption modes.
+         * The Agora RTC SDK supports built-in encryption, which is set to the `aes-128-xts` mode by default. Call this method to use other encryption modes.
          * 
          * All users in the same channel must use the same encryption mode and password.
          * 
@@ -860,7 +868,7 @@ namespace agora_gaming_rtc
          * - false: The recipients do not receive the data stream in the sent order.
          * 
          * @return
-         * - The ID of the data stream, if this method call succeeds.
+         * - &ge; 0: The ID of the data stream, if this method call succeeds.
          * - < 0: Failure.
          */
         public int CreateDataStream(bool reliable, bool ordered)
@@ -879,34 +887,41 @@ namespace agora_gaming_rtc
          * 
          * A failed `SendStreamMessage` method call triggers the `OnStreamMessageHandler` callback on the remote client.
          * 
-         * @note This method applies only to the Communication profile or to the hosts in the Live-broadcast profile. If an audience in the Live-broadcast profile calls this method, the audience may be switched to a host.
-         * 
-         * @param streamId ID of the sent data stream, returned in the {@link agora_gaming_rtc.IRtcEngine.CreateDataStream CreateDataStream} method.
+         * @note 
+         * - This method applies only to the Communication profile or to the hosts in the Live-broadcast profile. If an audience in the Live-broadcast profile calls this method, the audience may be switched to a host.
+         * - Ensure that you have created the data stream using {@link agora_gaming_rtc.IRtcEngine.CreateDataStream CreateDataStream} before calling this method.
+         *
+         * @param streamId ID of the sent data stream, returned in the `CreateDataStream` method.
          * @param data The sent data.
          * 
          * @return
          * - 0: Success.
          * - < 0: Failure.
          */
-        public int SendStreamMessage(int streamId, string data)
+        public int SendStreamMessage(int streamId, byte[] data)
         {
             return IRtcEngineNative.sendStreamMessage(streamId, data, data.Length);
         }
 
-        /** **DEPRECATED** Set the volume of the speaker.
+        /** Set the volume of the speaker. (macOS only.)
          * 
-         * Please use {@link agora_gaming_rtc.IRtcEngine.AdjustRecordingSignalVolume AdjustRecordingSignalVolume} and {@link agora_gaming_rtc.IRtcEngine.AdjustPlaybackSignalVolume AdjustPlaybackSignalVolume} instead.
+         * @deprecated This method is deprecated as of v2.3.0. Use {@link agora_gaming_rtc.IRtcEngine.AdjustRecordingSignalVolume AdjustRecordingSignalVolume} and {@link agora_gaming_rtc.IRtcEngine.AdjustPlaybackSignalVolume AdjustPlaybackSignalVolume} instead.
          * 
+         * @param volume Sets the speakerphone volume. The value ranges between 0 (lowest volume) and 255 (highest volume).
+         *
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
          */
         public int SetSpeakerphoneVolume(int volume)
         {
             return IRtcEngineNative.setSpeakerphoneVolume(volume);
         }
 
-        //only for live broadcast
-        /** **DEPRECATED** Sets the preferences for the high-quality video. (Live broadcast only).
+            //only for live broadcast
+        /** Sets the preferences for the high-quality video. (Live broadcast only).
          * 
-         * This method is deprecated as of v2.4.0.
+         * @deprecated This method is deprecated as of v2.4.0.
          * 
          * @param preferFrameRateOverImageQuality Sets the video quality preference:
          * - true: Frame rate over image quality.
@@ -921,9 +936,9 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.setVideoQualityParameters(preferFrameRateOverImageQuality);
         }
 
-        /** **DEPRECATED** Starts an audio call test.
+        /** Starts an audio call test.
          * 
-         * This method is deprecated as of v2.4.0.
+         * @deprecated This method is deprecated as of v2.4.0.
          * 
          * This method starts an audio call test to check whether the audio devices (for example, headset and speaker) and the network connection are working properly.
          * 
@@ -952,7 +967,7 @@ namespace agora_gaming_rtc
          * 
          * @note 
          * - Call this method before joining a channel.
-         * - After calling this method, call the {@link agora_gaming_rtc.IRtcEngine.StopEchoTest StopEchoTest} method to end the test. Otherwise, the app cannot run the next echo test, or call the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey "JoinChannelByKey" method.
+         * - After calling this method, call the {@link agora_gaming_rtc.IRtcEngine.StopEchoTest StopEchoTest} method to end the test. Otherwise, the app cannot run the next echo test, or call the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} method.
          * - In the Live-broadcast profile, only a host can call this method.
          * 
          * @param intervalInSeconds The time interval (sec) between when you speak and when the recording plays back.
@@ -1013,9 +1028,9 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.stopLastmileProbeTest();
         }
 
-        /** **DEPRECATED** Adds a watermark image to the local video or CDN live stream.
+        /** Adds a watermark image to the local video or CDN live stream.
          * 
-         * This method is deprecated from v2.9.1. Use {@link agora_gaming_rtc.IRtcEngine.AddVideoWatermark(string watermarkUrl, WatermarkOptions watermarkOptions) AddVideoWatermark} instead.
+         * @deprecated This method is deprecated from v2.9.1. Use {@link agora_gaming_rtc.IRtcEngine.AddVideoWatermark(string watermarkUrl, WatermarkOptions watermarkOptions) AddVideoWatermark} instead.
          * 
          * This method adds a PNG watermark image to the local video stream for the recording device, channel audience, and CDN live audience to view and capture.
          * 
@@ -1026,7 +1041,7 @@ namespace agora_gaming_rtc
          *     - In a local video stream, `url` in RtcImage refers to the absolute path of the added watermark image file in the local video stream.
          *     - In a CDN live stream, `url` in RtcImage refers to the URL address of the added watermark image in the CDN live broadcast.
          * - The source file of the watermark image must be in the PNG file format. If the width and height of the PNG file differ from your settings in this method, the PNG file will be cropped to conform to your settings.
-         * - The Agora SDK supports adding only one watermark image onto a local video or CDN live stream. The newly added watermark image replaces the previous one.
+         * - The Agora RTC SDK supports adding only one watermark image onto a local video or CDN live stream. The newly added watermark image replaces the previous one.
          * 
          * @param rtcImage The watermark image to be added to the local video stream. See RtcImage.
          * 
@@ -1055,7 +1070,8 @@ namespace agora_gaming_rtc
          * - This method supports adding a watermark image in the PNG file format only. Supported pixel formats of the PNG image are RGBA, RGB, Palette, Gray, and Alpha_gray.
          * - If the dimensions of the PNG image differ from your settings in this method, the image will be cropped or zoomed to conform to your settings.
          * - If you have enabled the local video preview by calling the {@link agora_gaming_rtc.IRtcEngine.StartPreview StartPreview} method, you can use the `visibleInPreview` member in the WatermarkOptions class to set whether or not the watermark is visible in preview.
-         * 
+         * - If you have enabled the mirror mode for the local video, the watermark on the local video is also mirrored. To avoid mirroring the watermark, Agora recommends that you do not use the mirror and watermark functions for the local video at the same time. You can implement the watermark function in your application layer.
+         *
          * @param watermarkUrl The local file path of the watermark image to be added. This method supports adding a watermark image from the local absolute or relative file path.
          * @param watermarkOptions The watermark's options to be added. See WatermarkOptions for more infomation.
          * 
@@ -1079,18 +1095,19 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.clearVideoWatermarks();
         }
 
-        /** Sets the remote user's video stream type received by the local user when the remote user sends dual streams.
+        /** Sets the stream type of the remote video.
          * 
-         * This method allows the application to adjust the corresponding video-stream type based on the size of the video window to reduce the bandwidth and resources.
+         * Under limited network conditions, if the publisher has not disabled the dual-stream mode using {@link agora_gaming_rtc.IRtcEngine.EnableDualStreamMode EnableDualStreamMode(false)}, the receiver can choose to receive either the high-quality video stream (the high resolution, and high bitrate video stream) or the low-video stream (the low resolution, and low bitrate video stream).
          * 
-         * - If the remote user enables the dual-stream mode by calling the {@link agora_gaming_rtc.IRtcEngine.EnableDualStreamMode EnableDualStreamMode} method, the SDK receives the high-stream video by default.
-         * - If the dual-stream mode is not enabled, the SDK receives the high-stream video by default.
+         * By default, users receive the high-quality video stream. Call this method if you want to switch to the low-video stream. This method allows the app to adjust the corresponding video stream type based on the size of the video window to reduce the bandwidth and resources.
          * 
-         * The method result returns in the {@link agora_gaming_rtc.OnApiExecutedHandler OnApiExecutedHandler} callback. The SDK receives the high-stream video by default to reduce the bandwidth. If needed, users may use this method to switch to the low-stream video. By default, the aspect ratio of the low-stream video is the same as the high-stream video. Once the resolution of the high-stream video is set, the system automatically sets the resolution, frame rate, and bitrate of the low-stream video.
+         * The aspect ratio of the low-video stream is the same as the high-quality video stream. Once the resolution of the high-quality video stream is set, the system automatically sets the resolution, frame rate, and bitrate of the low-video stream.
+         * 
+         * The method result returns in the {@link agora_gaming_rtc.OnApiExecutedHandler OnApiExecutedHandler} callback.
          * 
          * @param uid ID of the remote user sending the video stream.
          * @param streamType  Sets the video-stream type. See #REMOTE_VIDEO_STREAM_TYPE.
-         * 
+         *
          * @return
          * - 0: Success.
          * - < 0: Failure.
@@ -1102,7 +1119,7 @@ namespace agora_gaming_rtc
 
         /** Sets the mixed audio format for the {@link agora_gaming_rtc.AudioRawDataManager.OnMixedAudioFrameHandler OnMixedAudioFrameHandler} callback.
          * 
-         * @note The SDK calculates the sample interval according to the value of the `channels` of `AudioFrame`, `sampleRate`, and `samplesPerCall` parameters you set in this method. Sample interval (sec) = `samplePerCall`/(`sampleRate` × `channels`). Ensure that the value of sample interval is no less than 0.01. The SDK triggers the `OnMixedAudioFrameHandler` callback according to the sample interval.
+         * @note The SDK calculates the sample interval according to the value of the `channels` of `AudioFrame`, `sampleRate`, and `samplesPerCall` parameters you set in this method. Sample interval (sec) = `samplePerCall`/(`sampleRate` &times; `channels`). Ensure that the value of sample interval is no less than 0.01. The SDK triggers the `OnMixedAudioFrameHandler` callback according to the sample interval.
          * 
          * @param sampleRate Sets the sample rate (`samplesPerSec`) returned in the `OnMixedAudioFrameHandler` callback, which can be set as 8000, 16000, 32000, 44100, or 48000 Hz.
          * @param samplesPerCall Sets the number of samples the `OnMixedAudioFrameHandler` callback returns. Set it as 1024 for RTMP streaming.        
@@ -1134,7 +1151,7 @@ namespace agora_gaming_rtc
          * Once this method is enabled, the SDK returns the volume indication in the `OnVolumeIndicationHandler` callback at the set time interval, whether or not any user is speaking in the channel.
          *
          * @param interval Sets the time interval between two consecutive volume indications:
-         * - ≤ 0: Disables the volume indication.
+         * - &le; 0: Disables the volume indication.
          * - > 0: Time interval (ms) between two consecutive volume indications. We recommend setting `interval` > 200 ms. Do not set `interval` < 10 ms, or the `OnVolumeIndicationHandler` callback will not be triggered.
          * @param smooth Smoothing factor sets the sensitivity of the audio volume indicator. The value ranges between 0 and 10. The greater the value, the more sensitive the indicator. The recommended value is 3.
          * @param report_vad 
@@ -1145,17 +1162,16 @@ namespace agora_gaming_rtc
          * - 0: Success.
          * - < 0: Failure.
          */
-        public int EnableAudioVolumeIndication(int interval, int smooth, bool report_vad)
+        public int EnableAudioVolumeIndication(int interval, int smooth, bool report_vad = false)
         {
             return IRtcEngineNative.enableAudioVolumeIndication(interval, smooth, report_vad);
         }
 
         /** Adjusts the recording volume.
          *
-         * @param volume Recording volume. The value ranges between 0 and 400:
+         * @param volume Recording volume. To avoid echoes and improve call quality, Agora recommends setting the value of volume between 0 and 100. If you need to set the value higher than 100, contact support@agora.io first.
          * - 0: Mute.
          * - 100: Original volume.
-         * - 400: (Maximum) Four times the original volume with signal clipping protection.
          * 
          * @return
          * - 0: Success.
@@ -1172,10 +1188,9 @@ namespace agora_gaming_rtc
          * - This method adjusts the playback volume which is mixed volume of all remote users.
          * - Since v2.3.2, to mute the local audio playback, call both `AdjustPlaybackSignalVolume` and {@link agora_gaming_rtc.IRtcEngine.AdjustAudioMixingVolume AdjustAudioMixingVolume}, and set `volume` as 0.
          *
-         * @param volume The playback volume of all remote users. The value ranges from 0 to 400:
+         * @param volume The playback volume of all remote users. To avoid echoes and improve call quality, Agora recommends setting the value of volume between 0 and 100. If you need to set the value higher than 100, contact support@agora.io first.
          * - 0: Mute.
          * - 100: Original volume.
-         * - 400: (Maximum) Four times the original volume with signal clipping protection.
          * 
          * @return
          * - 0: Success.
@@ -1198,9 +1213,9 @@ namespace agora_gaming_rtc
          * 
          * @note
          * - Call this method when you are in a channel.
-         * - If the local audio mixing file does not exist, or if the SDK does not support the file format or cannot access the music file URL, the SDK returns WARN_AUDIO_MIXING_OPEN_ERROR = 701.
+         * - If the local audio mixing file does not exist, or if the SDK does not support the file format or cannot access the music file URL, the SDK returns `WARN_AUDIO_MIXING_OPEN_ERROR(701)`.
          * 
-         * @param filePath The absolute path of the local or online audio file to mix. Supported audio formats: 3GP, ASF, ADTS, AVI, MP3, MPEG-4, SAMI, and WAVE. For more information, see [Supported Media Formats in Media Foundation](https://docs.microsoft.com/en-us/windows/win32/medfound/supported-media-formats-in-media-foundation).
+         * @param filePath The absolute path (including the suffixes of the filename) of the local or online audio file to mix. Supported audio formats: mp3, mp4, m4a, aac, 3gp, mkv and wav. For more information, see [Supported Media Formats in Media Foundation](https://docs.microsoft.com/en-us/windows/win32/medfound/supported-media-formats-in-media-foundation).
          * @param loopback Sets which user can hear the audio mixing:
          * - true: Only the local user can hear the audio mixing.
          * - false: Both users can hear the audio mixing.
@@ -1266,7 +1281,9 @@ namespace agora_gaming_rtc
          * 
          * @note Calling this method does not affect the volume of audio effect file playback invoked by the {@link agora_gaming_rtc.AudioEffectManagerImpl.PlayEffect PlayEffect} method.
          * 
-         * @param volume Audio mixing volume. The value ranges between 0 and 100 (default).
+         * @param volume Audio mixing volume. The value ranges between 0 and 100.
+         * - 0: Mute.
+         * - 100: Original volume.
          * 
          * @return
          * - 0: Success.
@@ -1282,7 +1299,7 @@ namespace agora_gaming_rtc
          * Call this method when you are in a channel.
          * 
          * @return 
-         * - ≥ 0: The audio mixing duration, if this method call succeeds.
+         * - &ge; 0: The audio mixing duration, if this method call succeeds.
          * - < 0: Failure.
          */
         public int GetAudioMixingDuration()
@@ -1295,7 +1312,7 @@ namespace agora_gaming_rtc
          * Call this method when you are in a channel.
          *
          * @return 
-         * - ≥ 0: The current playback position of the audio mixing, if this method call succeeds.
+         * - &ge; 0: The current playback position of the audio mixing, if this method call succeeds.
          * - < 0: Failure.
          */
         public int GetAudioMixingCurrentPosition()
@@ -1303,8 +1320,9 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.getAudioMixingCurrentPosition();
         }
 
-        /** **DEPRECATED** Starts an audio recording.
-         * Use {@link agora_gaming_rtc.IRtcEngine.StartAudioRecording(string filePath, AUDIO_RECORDING_QUALITY_TYPE quality) StartAudioRecording2} instead.
+        /** Starts an audio recording.
+         *
+         * @deprecated Use {@link agora_gaming_rtc.IRtcEngine.StartAudioRecording(string filePath, int sampleRate, AUDIO_RECORDING_QUALITY_TYPE quality) StartAudioRecording2} instead.
          * 
          * The SDK allows recording during a call. Supported formats:
          * 
@@ -1328,6 +1346,7 @@ namespace agora_gaming_rtc
         {
             return IRtcEngineNative.startAudioRecording(filePath, (int)quality);
         }
+
         /** Starts an audio recording on the client.
          * 
          * The SDK allows recording during a call. After successfully calling this method, you can record the audio of all the users in the channel and get an audio recording file. 
@@ -1338,14 +1357,14 @@ namespace agora_gaming_rtc
          * @note
          * - Ensure that the directory you use to save the recording file exists and is writable.
          * - This method is usually called after the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} method. The recording automatically stops when you call the {@link agora_gaming_rtc.IRtcEngine.LeaveChannel LeaveChannel} method.
-         * - For better recording effects, set quality as {@link agora_gaming_rtc.AUDIO_RECORDING_QUALITY_TYPE#AUDIO_RECORDING_QUALITY_MEDIUM AUDIO_RECORDING_QUALITY_MEDIUM(1)} or {@link agora_gaming_rtc.AUDIO_RECORDING_QUALITY_TYPE#AUDIO_RECORDING_QUALITY_HIGH AUDIO_RECORDING_QUALITY_HIGH(2)} when `sampleRate` is 44.1 kHz or 48 kHz.
+         * - For better recording effects, set quality as {@link agora_gaming_rtc.AUDIO_RECORDING_QUALITY_TYPE#AUDIO_RECORDING_QUALITY_MEDIUM AUDIO_RECORDING_QUALITY_MEDIUM(1)} or {@link agora_gaming_rtc.AUDIO_RECORDING_QUALITY_TYPE#AUDIO_RECORDING_QUALITY_HIGH AUDIO_RECORDING_QUALITY_HIGH(2)} when `sampleRate` is 44100 Hz or 48000 Hz.
          * 
          * @param filePath Pointer to the absolute file path of the recording file. The string of the file name is in UTF-8.
-         * @param sampleRate Sample rate (kHz) of the recording file. Supported values are as follows:
-         * - 16
-         * - (Default) 32
-         * - 44.1
-         * - 48
+         * @param sampleRate Sample rate (Hz) of the recording file. Supported values are as follows:
+         * - 16000
+         * - (Default) 32000
+         * - 44100
+         * - 48000
          * @param quality Sets the audio recording quality. See #AUDIO_RECORDING_QUALITY_TYPE.
          * 
          * @return
@@ -1371,14 +1390,15 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.stopAudioRecording();
         }
 
-        /** Retrieves the AudioEffectManager object.
+        /** Retrieves the AudioEffectManagerImpl object.
          * 
-         * @return The AudioEffectManager object.
+         * @return The AudioEffectManagerImpl object.
          */
         public IAudioEffectManager GetAudioEffectManager()
         {
             return mAudioEffectM;
         }
+
         /** Retrieves the AudioRecordingDeviceManager object.
          * 
          * @return The AudioRecordingDeviceManager object.
@@ -1387,6 +1407,7 @@ namespace agora_gaming_rtc
         {
             return audioRecordingDeviceManager;
         }
+
         /** Retrieves the AudioPlaybackDeviceManager object.
          * 
          * @return The AudioPlaybackDeviceManager object.
@@ -1395,6 +1416,7 @@ namespace agora_gaming_rtc
         {
             return audioPlaybackDeviceManager;
         }
+
         /** Retrieves the VideoDeviceManager object.
          * 
          * @return The VideoDeviceManager object.
@@ -1403,6 +1425,7 @@ namespace agora_gaming_rtc
         {
             return videoDeviceManager;
         }
+
         /** Retrieves the AudioRawDataManager object.
          * 
          * @return The AudioRawDataManager object.
@@ -1411,6 +1434,7 @@ namespace agora_gaming_rtc
         {
             return audioRawDataManager;
         }
+
         /** Retrieves the VideoRawDataManager object.
          * 
          * @return The VideoRawDataManager object.
@@ -1419,6 +1443,7 @@ namespace agora_gaming_rtc
         {
             return videoRawDataManager;
         }
+
         /** Retrieves the VideoRender object.
          * 
          * @return The VideoRender object.
@@ -1427,6 +1452,7 @@ namespace agora_gaming_rtc
         {
             return videoRender;
         }
+
         /** Enables the video module.
          * 
          * Call this method either before joining a channel or during a call. If this method is called before joining a channel, the call starts in the video mode. If this method is called during an audio call, the audio mode switches to the video mode. To disable the video module, call the {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} method.
@@ -1507,11 +1533,9 @@ namespace agora_gaming_rtc
          * The SDK triggers the {@link agora_gaming_rtc.OnMicrophoneEnabledHandler OnMicrophoneEnabledHandler} callback once the local audio function is disabled or enabled.
          * 
          * @note
-         * - Call this method after the {@link agora_gaming_rtc.IRtcEngine.JoinChannelByKey JoinChannelByKey} method.
-         * - This method is different from the {@link agora_gaming_rtc.IRtcEngine.MuteLocalAudioStream MuteLocalAudioStream} method:
+         * This method is different from the {@link agora_gaming_rtc.IRtcEngine.MuteLocalAudioStream MuteLocalAudioStream} method:
          *  - `EnableLocalAudio`: Disables/Re-enables the local audio capturing and processing. If you disable or re-enable local audio recording using the `EnableLocalAudio` method, the local user may hear a pause in the remote audio playback.
          *  - `MuteLocalAudioStream`: Sends/Stops sending the local audio streams.
-         * - After you disable local audio recording using the `EnableLocalAudio(false)` method, the system volume switches to the media volume. Re-enabling local audio recording using the `EnableLocalAudio(true)` method switches the system volume back to the in-call volume.
          * 
          * @param enabled Sets whether to disable/re-enable the local audio function:
          * - true: (Default) Re-enable the local audio function, that is, to start the local audio capturing device (for example, the microphone).
@@ -1556,9 +1580,7 @@ namespace agora_gaming_rtc
 
         /** Starts the local video preview before joining the channel.
          * 
-         * Before calling this method, you must:
-         * 
-         * Call the {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo} method to enable video.
+         * Before calling this method, you must call the {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo} method to enable video.
          * 
          * @note Once the `StartPreview` method is called to start the local video preview, if you leave the channel by calling the {@link agora_gaming_rtc.IRtcEngine.LeaveChannel LeaveChannel} method, the local video preview remains until you call the {@link agora_gaming_rtc.IRtcEngine.StopPreview StopPreview} method to disable it.
          * 
@@ -1586,7 +1608,9 @@ namespace agora_gaming_rtc
          * 
          * This method sends the video pictures directly to the app instead of to the traditional view renderer.
          * 
-         * @note To get video raw data, call both {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo} and `EnableVideoObserver` methods.
+         * @note 
+         * - To get video raw data, call both {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo} and `EnableVideoObserver` methods.
+         * - Call this method before joining a channel.
          *
          * @return
          * - 0: Success.
@@ -1601,7 +1625,9 @@ namespace agora_gaming_rtc
          * 
          * This method disables sending video directly to the app.
          * 
-         * @note To stop getting video raw data, call both {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} and `DisableVideoObserver` methods.
+         * @note 
+         * - To stop getting video raw data, call both {@link agora_gaming_rtc.IRtcEngine.DisableVideo DisableVideo} and `DisableVideoObserver` methods.
+         * - Call this method after leaving the channel.
          *
          * @return
          * - 0: Success.
@@ -1612,8 +1638,10 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.disableVideoObserver();
         }
 
-        /** Stops/Resumes receiving all remote users' audio streams by default.
+        /** Sets whether to receive all remote audio streams by default. You can call this method either before or after joining a channel. If you call `SetDefaultMuteAllRemoteAudioStreams (true)` after joining a channel, the remote audio streams of all subsequent users are not received.
          * 
+         * @note If you want to resume receiving the audio stream, call {@link agora_gaming_rtc.IRtcEngine.MuteRemoteAudioStream MuteRemoteAudioStream (false)}, and specify the ID of the remote user whose audio stream you want to receive. To receive the audio streams of multiple remote users, call `MuteRemoteAudioStream (false)` as many times. Calling `SetDefaultMuteAllRemoteAudioStreams (false)` resumes receiving the audio streams of subsequent users only.
+         *
          * @param mute Sets whether to receive/stop receiving all remote users' audio streams by default:
          * - true: Stops receiving all remote users' audio streams by default.
          * - false: (Default) Receives all remote users' audio streams by default.
@@ -1628,7 +1656,11 @@ namespace agora_gaming_rtc
         }
 
         /** Stops/Resumes receiving all remote users' video streams by default.
+         *
+         * You can call this method either before or after joining a channel. If you call `SetDefaultMuteAllRemoteVideoStreams (true)` after joining a channel, the remote video streams of all subsequent users are not received.
          * 
+         * @note If you want to resume receiving the video stream, call {@link agora_gaming_rtc.IRtcEngine.MuteRemoteVideoStream MuteRemoteVideoStream (false)}, and specify the ID of the remote user whose video stream you want to receive. To receive the video streams of multiple remote users, call `MuteRemoteVideoStream (false)` as many times. Calling `SetDefaultMuteAllRemoteVideoStreams (false)` resumes receiving the video streams of subsequent users only.
+         *
          * @param mute Sets whether to receive/stop receiving all remote users' video streams by default:
          * - true: Stop receiving all remote users' video streams by default.
          * - false: (Default) Receive all remote users' video streams by default.
@@ -1679,7 +1711,7 @@ namespace agora_gaming_rtc
 
         /** Retrieves the connection state of the SDK.
          * 
-         * @return #CONNECTION_STATE_TYPE.
+         * @return #CONNECTION_STATE_TYPE
          */
         public CONNECTION_STATE_TYPE GetConnectionState()
         {
@@ -1720,8 +1752,8 @@ namespace agora_gaming_rtc
          * - < 0: Failure.
          */
         public int SetVideoEncoderConfiguration(VideoEncoderConfiguration configuration)
-        {
-            return IRtcEngineNative.setVideoEncoderConfiguration(configuration.dimensions.width, configuration.dimensions.height, (int)configuration.frameRate, configuration.minFrameRate, configuration.bitrate, configuration.minBitrate, (int)configuration.orientationMode, (int)configuration.degradationPreference);
+        {                                                                      
+            return IRtcEngineNative.setVideoEncoderConfiguration(configuration.dimensions.width, configuration.dimensions.height, (int)configuration.frameRate, configuration.minFrameRate, configuration.bitrate, configuration.minBitrate, (int)configuration.orientationMode, (int)configuration.degradationPreference, (int)configuration.mirrorMode);
         }
 
         /** Adjusts the audio mixing volume for local playback.
@@ -1788,43 +1820,43 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.setRecordingAudioFrameParameters(sampleRate, channel, (int)mode, samplesPerCall);
         }
 
-        /** Sets the audio playback format for the {@link agora_gaming_rtc.AudioRawDataManager.OnPlaybackAudioFrameHandler OnPlaybackAudioFrameHandler} callback.
-        * 
-        * @note The SDK calculates the sample interval according to the value of the `sampleRate`, `channel`, and `samplesPerCall` parameters you set in this method. Sample interval (sec) = `samplePerCall`/(`sampleRate` &times; `channel`). Ensure that the value of sample interval is no less than 0.01. The SDK triggers the `OnPlaybackAudioFrameHandler` callback according to the sample interval.
-        * 
-        * @param sampleRate Sets the sample rate returned in the `OnPlaybackAudioFrameHandler` callback, which can be set as 8000, 16000, 32000, 44100, or 48000 Hz.
-        * @param channel Sets the number of channels returned in the `OnPlaybackAudioFrameHandler` callback:
-        * - 1: Mono
-        * - 2: Stereo
-        * @param mode Sets the use mode (see #RAW_AUDIO_FRAME_OP_MODE_TYPE) of the `OnPlaybackAudioFrameHandler` callback.
-        * @param samplesPerCall Sets the number of samples the `OnPlaybackAudioFrameHandler` callback returns. Set it as 1024 for RTMP streaming.
-        * 
-        * @return
-        * - 0: Success.
-        * - < 0: Failure.
-        */
+         /** Sets the audio playback format for the {@link agora_gaming_rtc.AudioRawDataManager.OnPlaybackAudioFrameHandler OnPlaybackAudioFrameHandler} callback.
+         * 
+         * @note The SDK calculates the sample interval according to the value of the `sampleRate`, `channel`, and `samplesPerCall` parameters you set in this method. Sample interval (sec) = `samplePerCall`/(`sampleRate` &times; `channel`). Ensure that the value of sample interval is no less than 0.01. The SDK triggers the `OnPlaybackAudioFrameHandler` callback according to the sample interval.
+         * 
+         * @param sampleRate Sets the sample rate returned in the `OnPlaybackAudioFrameHandler` callback, which can be set as 8000, 16000, 32000, 44100, or 48000 Hz.
+         * @param channel Sets the number of channels returned in the `OnPlaybackAudioFrameHandler` callback:
+         * - 1: Mono
+         * - 2: Stereo
+         * @param mode Sets the use mode (see #RAW_AUDIO_FRAME_OP_MODE_TYPE) of the `OnPlaybackAudioFrameHandler` callback.
+         * @param samplesPerCall Sets the number of samples the `OnPlaybackAudioFrameHandler` callback returns. Set it as 1024 for RTMP streaming.
+         * 
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
         public int SetPlaybackAudioFrameParameters(int sampleRate, int channel, RAW_AUDIO_FRAME_OP_MODE_TYPE mode, int samplesPerCall)
         {
             return IRtcEngineNative.setPlaybackAudioFrameParameters(sampleRate, channel, (int)mode, samplesPerCall);
-        }
+        }  
 
-        /** Sets the fallback option for the locally published video stream based on the network conditions.
-        * 
-        * If `option` is set as {@link agora_gaming_rtc.STREAM_FALLBACK_OPTIONS#STREAM_FALLBACK_OPTION_AUDIO_ONLY STREAM_FALLBACK_OPTION_AUDIO_ONLY(2)}, the SDK will:
-        * 
-        * - Disable the upstream video but enable audio only when the network conditions deteriorate and cannot support both video and audio.
-        * - Re-enable the video when the network conditions improve.
-        * 
-        * When the locally published video stream falls back to audio only or when the audio-only stream switches back to the video, the SDK triggers the {@link agora_gaming_rtc.OnLocalPublishFallbackToAudioOnlyHandler OnLocalPublishFallbackToAudioOnlyHandler} callback.
-        * 
-        * @note Agora does not recommend using this method for CDN live streaming, because the remote CDN live user will have a noticeable lag when the locally published video stream falls back to audio only.
-        * 
-        * @param option Sets the fallback option for the locally published video stream. See #STREAM_FALLBACK_OPTIONS.
-        * 
-        * @return
-        * - 0: Success.
-        * - < 0: Failure.
-        */
+         /** Sets the fallback option for the locally published video stream based on the network conditions.
+         * 
+         * If `option` is set as {@link agora_gaming_rtc.STREAM_FALLBACK_OPTIONS#STREAM_FALLBACK_OPTION_AUDIO_ONLY STREAM_FALLBACK_OPTION_AUDIO_ONLY(2)}, the SDK will:
+         * 
+         * - Disable the upstream video but enable audio only when the network conditions deteriorate and cannot support both video and audio.
+         * - Re-enable the video when the network conditions improve.
+         * 
+         * When the locally published video stream falls back to audio only or when the audio-only stream switches back to the video, the SDK triggers the {@link agora_gaming_rtc.OnLocalPublishFallbackToAudioOnlyHandler OnLocalPublishFallbackToAudioOnlyHandler} callback.
+         * 
+         * @note Agora does not recommend using this method for CDN live streaming, because the remote CDN live user will have a noticeable lag when the locally published video stream falls back to audio only.
+         * 
+         * @param option Sets the fallback option for the locally published video stream. See #STREAM_FALLBACK_OPTIONS.
+         * 
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
         public int SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS option)
         {
             return IRtcEngineNative.setLocalPublishFallbackOption((int)option);
@@ -1843,7 +1875,7 @@ namespace agora_gaming_rtc
          * @return
          * - 0: Success.
          * - < 0: Failure.
-         */
+         */   
         public int SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS option)
         {
             return IRtcEngineNative.setRemoteSubscribeFallbackOption((int)option);
@@ -1854,7 +1886,7 @@ namespace agora_gaming_rtc
          * - If the dual-stream mode is enabled by calling the {@link agora_gaming_rtc.IRtcEngine.EnableDualStreamMode EnableDualStreamMode} method, the user receives the high-stream video by default. The `SetRemoteDefaultVideoStreamType` method allows the application to adjust the corresponding video-stream type according to the size of the video window, reducing the bandwidth and resources.
          * - If the dual-stream mode is not enabled, the user receives the high-stream video by default.
          * 
-         * The result after calling this method is returned in the {@link agora_gaming_rtc.OnApiExecutedHandler OnApiExecutedHandler} callback. The Agora SDK receives the high-stream video by default to reduce the bandwidth. If needed, users can switch to the low-stream video through this method.
+         * The result after calling this method is returned in the {@link agora_gaming_rtc.OnApiExecutedHandler OnApiExecutedHandler} callback. The Agora RTC SDK receives the high-stream video by default to reduce the bandwidth. If needed, users can switch to the low-stream video through this method.
          * 
          * @param remoteVideoStreamType Sets the default video-stream type. See #REMOTE_VIDEO_STREAM_TYPE.
          * 
@@ -1911,7 +1943,7 @@ namespace agora_gaming_rtc
          * @return
          * - 0: Success.
          * - < 0: Failure.
-         */
+         */   
         public int RemovePublishStreamUrl(string url)
         {
             return IRtcEngineNative.removePublishStreamUrl(url);
@@ -1930,9 +1962,11 @@ namespace agora_gaming_rtc
 
         /** Enables interoperability with the Agora Web SDK.
          * 
+         * @deprecated This method is deprecated. As of v3.0.1, the Unity SDK automatically enables interoperability with the Web SDK, so you no longer need to call this method.
+         *
          * @note 
          * - This method applies only to the Live-broadcast profile. In the Communication profile, interoperability with the Agora Web SDK is enabled by default.
-         * - If the channel has Web SDK users, ensure that you call this method, or the video of the Native user will be a black screen for the Web user.
+         * - If the channel has Web SDK users, ensure that you call this method, or the video of the Unity user will be a black screen for the Web user.
          * 
          * @param enabled Sets whether to enable/disable interoperability with the Agora Web SDK:
          * - true: Enable.
@@ -1964,12 +1998,34 @@ namespace agora_gaming_rtc
          */
         public int SetLiveTranscoding(LiveTranscoding transcoding)
         {
-            return IRtcEngineNative.setLiveTranscoding(transcoding.width, transcoding.height, transcoding.videoBitrate, transcoding.videoFramerate, transcoding.lowLatency, transcoding.videoGop, (int)transcoding.videoCodecProfile, transcoding.backgroundColor, transcoding.userCount, transcoding.transcodingUsers.uid, transcoding.transcodingUsers.x, transcoding.transcodingUsers.y, transcoding.transcodingUsers.width, transcoding.transcodingUsers.height, transcoding.transcodingUsers.zOrder, transcoding.transcodingUsers.alpha, transcoding.transcodingUsers.audioChannel, transcoding.transcodingExtraInfo, transcoding.metadata, transcoding.watermark.url, transcoding.watermark.x, transcoding.watermark.y, transcoding.watermark.width, transcoding.watermark.height, transcoding.backgroundImage.url, transcoding.backgroundImage.x, transcoding.backgroundImage.y, transcoding.backgroundImage.width, transcoding.backgroundImage.height, (int)transcoding.audioSampleRate, transcoding.audioBitrate, transcoding.audioChannels, (int)transcoding.audioCodecProfile);
+            String transcodingUserInfo = "";
+            if (transcoding.userCount != 0 && transcoding.transcodingUsers != null) {
+                for (int i = 0; i < transcoding.userCount; i ++) {
+                    transcodingUserInfo += transcoding.transcodingUsers[i].uid;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].x;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].y;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].width;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].height;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].zOrder;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].alpha;
+                    transcodingUserInfo += "\t";
+                    transcodingUserInfo += transcoding.transcodingUsers[i].audioChannel;
+                    transcodingUserInfo += "\t";
+                }
+            }
+            Debug.Log("transcodingUserInfo  " + transcodingUserInfo);
+            return IRtcEngineNative.setLiveTranscoding(transcoding.width, transcoding.height, transcoding.videoBitrate, transcoding.videoFramerate, transcoding.lowLatency, transcoding.videoGop, (int)transcoding.videoCodecProfile, transcoding.backgroundColor, transcoding.userCount, transcodingUserInfo, transcoding.transcodingExtraInfo, transcoding.metadata, transcoding.watermark.url, transcoding.watermark.x, transcoding.watermark.y, transcoding.watermark.width, transcoding.watermark.height, transcoding.backgroundImage.url, transcoding.backgroundImage.x, transcoding.backgroundImage.y, transcoding.backgroundImage.width, transcoding.backgroundImage.height, (int)transcoding.audioSampleRate, transcoding.audioBitrate, transcoding.audioChannels, (int)transcoding.audioCodecProfile);
         }
 
-        /** Pushes the video frame using the {@link agora_gaming_rtc.ExternalVideoFrame ExternalVideoFrame} and passes the video frame to the Agora SDK.
+        /** Pushes the video frame using the {@link agora_gaming_rtc.ExternalVideoFrame ExternalVideoFrame} and passes the video frame to the Agora RTC SDK.
          * 
-         * @note In the Communication profile, this method does not support video frames in the Texture format.
+         * @note This method does not support video frames in the Texture format.
          * 
          * @param externalVideoFrame Video frame to be pushed. See {@link agora_gaming_rtc.ExternalVideoFrame ExternalVideoFrame}.
          * 
@@ -1987,7 +2043,7 @@ namespace agora_gaming_rtc
          * @param enable Sets whether to use the external video source:
          * - true: Use the external video source.
          * - false: (Default) Do not use the external video source.
-         * @param useTexture Sets whether to use texture as an input:
+         * @param useTexture Sets whether to use texture as an input (Agora does not support texture now, please use `false`):
          * - true: Use texture as an input.
          * - false: (Default) Do not use texture as an input.
          * 
@@ -1995,7 +2051,7 @@ namespace agora_gaming_rtc
          * - 0: Success.
          * - < 0: Failure.
          */
-        public int SetExternalVideoSource(bool enable, bool useTexture)
+        public int SetExternalVideoSource(bool enable, bool useTexture = false)
         {
             return IRtcEngineNative.setExternalVideoSource(enable, useTexture);
         }
@@ -2039,14 +2095,14 @@ namespace agora_gaming_rtc
          * @note Call this method when you are in a channel.
          * 
          * @return
-         * - 0: The audio mixing volume, if this method call succeeds. The value range is [0,100].
+         * - &ge; 0: The audio mixing volume, if this method call succeeds. The value range is [0,100].
          * - < 0: Failure.
          */
         public int GetAudioMixingPlayoutVolume()
         {
             return IRtcEngineNative.getAudioMixingPlayoutVolume();
-        }
-
+        }   
+        
         /** Retrieves the audio mixing volume for publishing.
          * 
          * This method helps troubleshoot audio volume related issues.
@@ -2054,7 +2110,7 @@ namespace agora_gaming_rtc
          * @note Call this method when you are in a channel.
          * 
          * @return
-         * - 0: The audio mixing volume for publishing, if this method call succeeds. The value range is [0,100].
+         * - &ge; 0: The audio mixing volume for publishing, if this method call succeeds. The value range is [0,100].
          * - < 0: Failure.
          */
         public int GetAudioMixingPublishVolume()
@@ -2081,26 +2137,51 @@ namespace agora_gaming_rtc
 
         /** Sets the local voice changer option.
          * 
-         * @note Do not use this method together with the {@link agora_gaming_rtc.IRtcEngine.SetLocalVoiceReverbPreset SetLocalVoiceReverbPreset} method, because the method called later overrides the one called earlier.
+         * This method can be used to set the local voice effect for users in a communication channel or broadcasters in a live broadcast channel.
+         * Voice changer options include the following voice effects:
          * 
-         * @param voiceChanger Sets the local voice changer option. See #VOICE_CHANGER_PRESET.
+         * - `VOICE_CHANGER_XXX`: Changes the local voice to an old man, a little boy, or the Hulk. Applies to the voice talk scenario.
+         * - `VOICE_BEAUTY_XXX`: Beautifies the local voice by making it sound more vigorous, resounding, or adding spacial resonance. Applies to the voice talk and singing scenario.
+         * - `GENERAL_BEAUTY_VOICE_XXX`: Adds gender-based beautification effect to the local voice. Applies to the voice talk scenario.
+         *   - For a male voice: Adds magnetism to the voice.
+         *   - For a female voice: Adds freshness or vitality to the voice.
+         * 
+         * @note
+         * - To achieve better voice effect quality, Agora recommends setting the profile parameter in {@link agora_gaming_rtc.IRtcEngine.SetAudioProfile SetAudioProfile} as `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`.
+         * - This method works best with the human voice, and Agora does not recommend using it for audio containing music and a human voice.
+         * - Do not use this method with {@link agora_gaming_rtc.IRtcEngine.SetLocalVoiceReverbPreset SetLocalVoiceReverbPreset}, because the method called later overrides the one called earlier.
+         * 
+         * @param voiceChanger Sets the local voice changer option. The default value is `VOICE_CHANGER_OFF`, which means the original voice. See details in #VOICE_CHANGER_PRESET. 
+         * Gender-based beatification effect works best only when assigned a proper gender:
+         * - For male: `GENERAL_BEAUTY_VOICE_MALE_MAGNETIC`
+         * - For female: `GENERAL_BEAUTY_VOICE_FEMALE_FRESH` or `GENERAL_BEAUTY_VOICE_FEMALE_VITALITY`
+         * Failure to do so can lead to voice distortion.
          * 
          * @return
          * - 0: Success.
-         * - < 0: Failure.
+         * - < 0: Failure. Check if the enumeration is properly set.
          */
         public int SetLocalVoiceChanger(VOICE_CHANGER_PRESET voiceChanger)
         {
             return IRtcEngineNative.setLocalVoiceChanger((int)voiceChanger);
         }
 
-        /** Sets the preset local voice reverberation effect.
+        /** Sets the local voice reverberation option, including the virtual stereo.
          * 
-         * @note 
-         * - Do not use this method together with {@link agora_gaming_rtc.IRtcEngine.SetLocalVoiceReverb SetLocalVoiceReverb}.
-         * - Do not use this method together with the {@link agora_gaming_rtc.IRtcEngine.SetLocalVoiceChanger SetLocalVoiceChanger} method, because the method called later overrides the one called earlier.
+         * This method sets the local voice reverberation for users in a communication channel or broadcasters in a Live-broadcast channel.
+         * After successfully calling this method, all users in the channel can hear the voice with reverberation.
          * 
-         * @param audioReverbPreset Sets the preset audio reverberation configuration. See #AUDIO_REVERB_PRESET.
+         * @note
+         * - When calling this method with enumerations that begin with `AUDIO_REVERB_FX`, ensure that you set profile in {@link agora_gaming_rtc.IRtcEngine.SetAudioProfile SetAudioProfile} 
+         * as `AUDIO_PROFILE_MUSIC_HIGH_QUALITY(4)` or `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`; otherwise, this methods cannot set the corresponding voice reverberation option.
+         * - When calling this method with `AUDIO_VIRTUAL_STEREO`, Agora recommends setting the `profile` parameter in `SetAudioProfile` as `AUDIO_PROFILE_MUSIC_HIGH_QUALITY_STEREO(5)`.
+         * - This method works best with the human voice, and Agora does not recommend using it for audio containing music and a human voice.
+         * - Do not use this method with {@link agora_gaming_rtc.IRtcEngine.SetLocalVoiceChanger SetLocalVoiceChanger}, because the method called later overrides the one called earlier.
+         * For detailed considerations, see the advanced guide *Voice Enhancement and Effects*.
+         * 
+         * @param audioReverbPreset The local voice reverberation option. The default value is `AUDIO_REVERB_OFF`,
+         * which means the original voice. See #AUDIO_REVERB_PRESET.
+         * To achieve better voice effects, Agora recommends the enumeration whose name begins with `AUDIO_REVERB_FX`.
          * 
          * @return
          * - 0: Success.
@@ -2178,7 +2259,7 @@ namespace agora_gaming_rtc
          * 
          * Use this method with the {@link agora_gaming_rtc.IRtcEngine.SetRemoteSubscribeFallbackOption SetRemoteSubscribeFallbackOption} method. If the fallback function is enabled for a subscribed stream, the SDK ensures the high-priority user gets the best possible stream quality.
          * 
-         * @note The Agora SDK supports setting `userPriority` as high for one user only.
+         * @note The Agora RTC SDK supports setting `userPriority` as high for one user only.
          * 
          * @param uid The ID of the remote user.
          * @param userPriority Sets the priority of the remote user. See #PRIORITY_TYPE.
@@ -2214,7 +2295,7 @@ namespace agora_gaming_rtc
          * @param enabled
          * - true: Enables the external audio sink.
          * - false: (Default) Disables the external audio sink.
-         * @param sampleRate Sets the sample rate (Hz) of the external audio sink, which can be set as 8000, 16000, 32000, 44100 or 48000.
+         * @param sampleRate Sets the sample rate (Hz) of the external audio sink, which can be set as 16000, 32000, 44100 or 48000.
          * @param channels Sets the number of audio channels of the external audio sink:
          * - 1: Mono.
          * - 2: Stereo.
@@ -2313,7 +2394,7 @@ namespace agora_gaming_rtc
             userInfo.uid = (uint)uid;
             return userInfo;
         }
-
+        
         /** Gets the user information by passing in the user ID.
          * 
          * After a remote user joins the channel, the SDK gets the user ID and user account of the remote user, caches them in a mapping table object (`userInfo`), and triggers the {@link agora_gaming_rtc.OnUserInfoUpdatedHandler OnUserInfoUpdatedHandler} callback on the local client.
@@ -2341,11 +2422,15 @@ namespace agora_gaming_rtc
 
         /** Enables/Disables image enhancement and sets the options.
          * 
-         * @note This method is for Android and iOS only.
+         * @since v3.0.1
+         *
+         * @note
+         * - Call this method after calling {@link agora_gaming_rtc.IRtcEngine.EnableVideo EnableVideo}.
+         * - Currently this method does not apply for macOS.
          * 
          * @param enabled Sets whether or not to enable image enhancement:
-         * - true: enables image enhancement.
-         * - false: disables image enhancement.
+         * - true: Enables image enhancement.
+         * - false: Disables image enhancement.
          * @param beautyOptions Sets the image enhancement option. See {@link agora_gaming_rtc.BeautyOptions BeautyOptions}.
          * 
          * @return
@@ -2370,7 +2455,7 @@ namespace agora_gaming_rtc
          * - < 0: Failure.
          *     - `ERR_INVALID_STATE`: the screen sharing state is invalid, probably because another screen or window is being shared. Call {@link agora_gaming_rtc.IRtcEngine.StopScreenCapture StopScreenCapture} to stop the current screen sharing.
          *     - `ERR_INVALID_ARGUMENT(-2)`: the argument is invalid.
-         */
+         */ 
         public int StartScreenCaptureByDisplayId(uint displayId, Rectangle rectangle, ScreenCaptureParameters screenCaptureParameters)
         {
             return IRtcEngineNative.startScreenCaptureByDisplayId(displayId, rectangle.x, rectangle.y, rectangle.width, rectangle.height, screenCaptureParameters.dimensions.width, screenCaptureParameters.dimensions.height, screenCaptureParameters.frameRate, screenCaptureParameters.bitrate, screenCaptureParameters.captureMouseCursor);
@@ -2378,6 +2463,8 @@ namespace agora_gaming_rtc
 
         /** Shares the whole or part of a screen by specifying the screen rect.
          * 
+         * @note This method is for Windows and macOS only.
+         *
          * @param screenRectangle Sets the relative location of the screen to the virtual screen.
          * @param regionRectangle (Optional) Sets the relative location of the region to the screen. `NULL` means sharing the whole screen. See Rectangle. If the specified region overruns the screen, the SDK shares only the region within it; if you set width or height as 0, the SDK shares the whole screen.
          * @param screenCaptureParameters Sets the screen sharing encoding parameters. See ScreenCaptureParameters.
@@ -2397,6 +2484,8 @@ namespace agora_gaming_rtc
          * 
          * A content hint suggests the type of the content being shared, so that the SDK applies different optimization algorithm to different types of content.
          * 
+         * @note This method is for Windows and macOS only.
+         *
          * @param videoContentHint Sets the content hint for screen sharing. See VideoContentHint.
          * 
          * @return
@@ -2410,6 +2499,8 @@ namespace agora_gaming_rtc
 
         /** Updates the screen sharing parameters.
          * 
+         * @note This method is for Windows and macOS only.
+         *
          * @param screenCaptureParameters Sets the screen sharing encoding parameters. See ScreenCaptureParameters.
          * 
          * @return
@@ -2424,6 +2515,8 @@ namespace agora_gaming_rtc
 
         /** Updates the screen sharing region.
          * 
+         * @note This method is for Windows and macOS only.
+         *
          * @param rectangle Sets the relative location of the region to the screen or window. `NULL` means sharing the whole screen or window. See Rectangle. If the specified region overruns the screen or window, the SDK shares only the region within it; if you set width or height as 0, the SDK shares the whole screen or window.
          * 
          * @return
@@ -2438,6 +2531,8 @@ namespace agora_gaming_rtc
 
         /** Stop screen sharing.
          * 
+         * @note This method is for Windows and macOS only.
+         *
          * @return
          * - 0: Success.
          * - < 0: Failure.
@@ -2460,9 +2555,10 @@ namespace agora_gaming_rtc
          * 
          * @note 
          * - Ensure that you enable the RTMP Converter service before using this function.
-         * - This method applies to the Native SDK v2.4.1 and later.
+         * - This method applies to the Live-Broadcast profile only.
+         * - You can inject only one media stream into the channel at the same time.
          * 
-         * @param url The URL address which is added to the ongoing live broadcast. Valid protocols are RTMP, HLS, and FLV.
+         * @param url The URL address which is added to the ongoing live broadcast. Valid protocols are RTMP, HLS, and HTTP-FLV.
          * - Supported FLV audio codec type: AAC.
          * - Supported FLV video codec type: H264 (AVC).
          * @param streamConfig The InjectStreamConfig object that contains the configuration of the added voice or video stream.
@@ -2479,7 +2575,7 @@ namespace agora_gaming_rtc
         {
             return IRtcEngineNative.addInjectStreamUrl(url, streamConfig.width, streamConfig.height, streamConfig.videoGop, streamConfig.videoFramerate, streamConfig.videoBitrate, (int)streamConfig.audioSampleRate, streamConfig.audioBitrate, streamConfig.audioChannels);
         }
-
+        
         /** Removes the voice or video stream URL address from a live broadcast.
          * 
          * This method removes the URL address (added by the {@link agora_gaming_rtc.IRtcEngine.AddInjectStreamUrl AddInjectStreamUrl} method) from the live broadcast.
@@ -2529,7 +2625,7 @@ namespace agora_gaming_rtc
          * - This method is for iOS only.
          * - This method restricts the SDK’s manipulation of the audio session. Any operation to the audio session relies solely on the app, other apps, or third-party components.
          * 
-         * @param restriction he operational restriction (bit mask) of the SDK on the audio session. See AUDIO_SESSION_OPERATION_RESTRICTION.
+         * @param restriction The operational restriction (bit mask) of the SDK on the audio session. See #AUDIO_SESSION_OPERATION_RESTRICTION.
          * 
          * @return
          * - 0: Success.
@@ -2562,7 +2658,7 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.startChannelMediaRelay(mediaRelayConfiguration.srcInfo.channelName, mediaRelayConfiguration.srcInfo.token, mediaRelayConfiguration.srcInfo.uid, mediaRelayConfiguration.destInfos.channelName, mediaRelayConfiguration.destInfos.token, mediaRelayConfiguration.destInfos.uid, mediaRelayConfiguration.destCount);
         }
 
-        /** Updates the channels for media stream relay. After a successful {@link agora_gaming_rtc.IRtcEngine.StartChannelMediaRelay StartChannelMediaRelay method call, if you want to relay the media stream to more channels, or leave the current relay channel, you can call the `UpdateChannelMediaRelay` method.
+        /** Updates the channels for media stream relay. After a successful {@link agora_gaming_rtc.IRtcEngine.StartChannelMediaRelay StartChannelMediaRelay} method call, if you want to relay the media stream to more channels, or leave the current relay channel, you can call the `UpdateChannelMediaRelay` method.
          * 
          * After a successful method call, the SDK triggers the {@link agora_gaming_rtc.OnChannelMediaRelayEventHandler OnChannelMediaRelayEventHandler} callback with the {@link agora_gaming_rtc.CHANNEL_MEDIA_RELAY_EVENT#RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL RELAY_EVENT_PACKET_UPDATE_DEST_CHANNEL(7)} state code.
          * 
@@ -2607,7 +2703,7 @@ namespace agora_gaming_rtc
          * @param token The token generated at your server:
          * - For low-security requirements: You can use the temporary token generated in Console. For details, see [Get a temporary token](https://docs.agora.io/en/Agora%20Platform/token?platfor%20*%20m=All%20Platforms#get-a-temporary-token).
          * - For high-security requirements: Use the token generated at your server. For details, see [Get a token](https://docs.agora.io/en/Agora%20Platform/token?platfor%20*%20m=All%20Platforms#get-a-token).
-         * @param channelId nique channel name for the AgoraRTC session in the string format. The string length must be less than 64 bytes. Supported character scopes are:
+         * @param channelId Unique channel name for the AgoraRTC session in the string format. The string length must be less than 64 bytes. Supported character scopes are:
          * - All lowercase English letters: a to z.
          * - All uppercase English letters: A to Z.
          * - All numeric characters: 0 to 9.
@@ -2621,6 +2717,11 @@ namespace agora_gaming_rtc
         public int SwitchChannel(string token, string channelId)
         {
             return IRtcEngineNative.switchChannel(token, channelId);
+        }
+
+        public int SetMultiChannelWant(bool multiChannelWant)
+        {
+            return IRtcEngineNative.setMultiChannelWant(multiChannelWant);
         }
 
         /** Sets whether to enable the mirror mode of both local video and remote video.
@@ -2657,6 +2758,120 @@ namespace agora_gaming_rtc
 
         /** Shares the whole or part of a window by specifying the window ID.
          * 
+         * @note This method is for Windows and macOS only.
+         * 
+         * Since v3.0.0, this method supports sharing with common Windows platforms. Agora tests the mainstream Windows applications, see details as follows:
+         * 
+         * <table>
+         *     <tr>
+         *         <td><b>OS version</b></td>
+         *         <td><b>Software</b></td>
+         *         <td><b>Software name</b></td>
+         *         <td><b>Whether support</b></td>
+         *     </tr>
+         *     <tr>
+         *         <td rowspan="8">win10</td>
+         *         <td >Chrome</td>
+         *         <td>76.0.3809.100</td>
+         *         <td>No</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office Word</td>
+         *         <td rowspan="3">18.1903.1152.0</td>
+         *         <td>Yes</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Office Excel</td>
+         *         <td>No</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office PPT</td>
+         *         <td>No</td>
+         *     </tr>
+         *  <tr>
+         *         <td>WPS Word</td>
+         *         <td rowspan="3">11.1.0.9145</td>
+         *         <td rowspan="3">Yes</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>WPS Excel</td>
+         *     </tr>
+         *     <tr>
+         *         <td>WPS PPT</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Media Player (come with the system)</td>
+         *         <td>All</td>
+         *         <td>Yes</td>
+         *     </tr>
+         * 	 <tr>
+         *         <td rowspan="8">win8</td>
+         *         <td >Chrome</td>
+         *         <td>All</td>
+         *         <td>Yes</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office Word</td>
+         *         <td rowspan="3">All</td>
+         *         <td rowspan="3">Yes</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Office Excel</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office PPT</td>
+         *     </tr>
+         *  <tr>
+         *         <td>WPS Word</td>
+         *         <td rowspan="3">11.1.0.9098</td>
+         *         <td rowspan="3">Yes</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>WPS Excel</td>
+         *     </tr>
+         *     <tr>
+         *         <td>WPS PPT</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Media Player(come with the system)</td>
+         *         <td>All</td>
+         *         <td>Yes</td>
+         *     </tr>
+         *   <tr>
+         *         <td rowspan="8">win7</td>
+         *         <td >Chrome</td>
+         *         <td>73.0.3683.103</td>
+         *         <td>No</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office Word</td>
+         *         <td rowspan="3">All</td>
+         *         <td rowspan="3">Yes</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Office Excel</td>
+         *     </tr>
+         *     <tr>
+         *         <td>Office PPT</td>
+         *     </tr>
+         *  <tr>
+         *         <td>WPS Word</td>
+         *         <td rowspan="3">11.1.0.9098</td>
+         *         <td rowspan="3">No</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>WPS Excel</td>
+         *     </tr>
+         *     <tr>
+         *         <td>WPS PPT</td>
+         *     </tr>
+         * 	    <tr>
+         *         <td>Media Player(come with the system)</td>
+         *         <td>All</td>
+         *         <td>No</td>
+         *     </tr>
+         * </table>
+         * 
          * @param windowId The ID of the window to be shared.
          * @param regionRect (Optional) The relative location of the region to the window. `NULL` means sharing the whole window. See Rectangle. If the specified region overruns the window, the SDK shares only the region within it; if you set width or height as 0, the SDK shares the whole window.
          * @param screenCaptureParameters Window sharing encoding parameters. See ScreenCaptureParameters.
@@ -2674,6 +2889,8 @@ namespace agora_gaming_rtc
 
         /** Enables in-ear monitoring.
          * 
+         * @note This method is only for Android and iOS.
+         *
          * @param enabled Sets whether to enable/disable in-ear monitoring:
          * - true: Enable.
          * - false: (Default) Disable.
@@ -2687,11 +2904,123 @@ namespace agora_gaming_rtc
             return IRtcEngineNative.enableInEarMonitoring(enabled);
         }
 
-        /** Initializes the IRtcEngine.
-         *
-         * @param appId The App ID of your project.
+        /** Adjusts the playback volume of a specified remote user.
          * 
-         * @return The IRtcEngine instance.
+         * @since v3.0.1
+         *
+         * You can call this method as many times as necessary to adjust the playback volume of different remote users, or to repeatedly adjust the playback volume of the same remote user.
+         * 
+         * @note
+         * - Call this method after joining a channel.
+         * - The playback volume here refers to the mixed volume of a specified remote user.
+         * - This method can only adjust the playback volume of one specified remote user at a time. To adjust the playback volume of different remote users, call the method as many times, once for each remote user.
+         * 
+         * @param uid The ID of the remote user.
+         * @param volume The playback volume of the specified remote user. The value ranges from 0 to 100:
+         * - 0: Mute.
+         * - 100: Original volume.
+         * 
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
+        public int AdjustUserPlaybackSignalVolume(uint uid, int volume)
+        {
+            return IRtcEngineNative.adjustUserPlaybackSignalVolume(uid, volume);
+        }
+
+        /** Creates and gets an `AgoraChannel` object.
+         * 
+         * @since v3.0.1
+         *
+         * To join more than one channel, call this method multiple times to create as many `AgoraChannel` objects as needed, and
+         * call the {@link agora_gaming_rtc.AgoraChannel.JoinChannel JoinChannel} method of each created `AgoraChannel` object.
+         * 
+         * After joining multiple channels, you can simultaneously subscribe to streams of all the channels, but publish a stream in only one channel at one time.
+         * @param channelId The unique channel name for an Agora RTC session. It must be in the string format and not exceed 64 bytes in length. Supported character scopes are:
+         * - All lowercase English letters: a to z.
+         * - All uppercase English letters: A to Z.
+         * - All numeric characters: 0 to 9.
+         * - The space character.
+         * - Punctuation characters and other symbols, including: "!", "#", "$", "%", "&", "(", ")", "+", "-", ":", ";", "<", "=", ".", ">", "?", "@", "[", "]", "^", "_", " {", "}", "|", "~", ",".
+         * 
+         * @note
+         * - This parameter does not have a default value. You must set it.
+         * - Do not set it as the empty string "". Otherwise, the SDK returns `ERR_REFUSED(5)`.
+         * 
+         * @return
+         * - The `AgoraChannel` object, if the method call succeeds.
+         * - An empty pointer `NULL`, if the method call fails.
+         * - `ERR_REFUSED(5)`, if you set channelId as the empty string "".
+         */
+        public AgoraChannel CreateChannel(string channelId)
+        {
+            return AgoraChannel.CreateChannel(this, channelId);
+        }
+
+        /** Enables/Disables face detection for the local user. Applies to Android and iOS only.
+         * 
+         * @since v3.0.1
+         *
+         * Once face detection is enabled, the SDK triggers the {@link agora_gaming_rtc.OnFacePositionChangedHandler OnFacePositionChangedHandler} callback
+         * to report the face information of the local user, which includes the following aspects:
+         * - The width and height of the local video.
+         * - The position of the human face in the local video.
+         * - The distance between the human face and the device screen.
+         *
+         * @param enable Determines whether to enable the face detection function for the local user:
+         * - true: Enable face detection.
+         * - false: (Default) Disable face detection.
+         *
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
+        public int EnableFaceDetection(bool enable)
+        {
+            return IRtcEngineNative.enableFaceDetection(enable);
+        }
+
+        /** Sets the pitch of the local music file.
+         *
+         * @since v3.0.1
+         *
+         * When a local music file is mixed with a local human voice, call this method to set the pitch of the local music file only.
+         *
+         * @note
+         * Call this method after calling {@link agora_gaming_rtc.IRtcEngine.StartAudioMixing StartAudioMixing}.
+         *
+         * @param pitch Sets the pitch of the local music file by chromatic scale. The default value is 0,
+         * which means keeping the original pitch. The value ranges from -12 to 12, and the pitch value between
+         * consecutive values is a chromatic value. The greater the absolute value of this parameter, the
+         * higher or lower the pitch of the local music file.
+         *
+         * @return
+         * - 0: Success.
+         * - < 0: Failure.
+         */
+        public int SetAudioMixingPitch(int pitch)
+        {
+            return IRtcEngineNative.setAudioMixingPitch(pitch);
+        }
+
+        /** Initializes an IRtcEngine instance.
+         * 
+         * Unless otherwise specified, all the methods provided by the IRtcEngine class are executed asynchronously. Agora recommends calling these methods in the same thread.
+         *
+         * @note 
+         * - You must initialize the IRtcEngine instance before calling any other method.
+         * - You can initialize an IRtcEngine instance either by calling this method or by calling {@link agora_gaming_rtc.IRtcEngine.GetEngine(RtcEngineConfig engineConfig) GetEngine2}. The difference between `GetEngine2` and this method is that `GetEngine2` enables you to specify the connection area.
+         * - The Agora RTC Unity SDK supports initializing only one IRtcEngine instance for an app for now.
+         * 
+         * @param appId The App ID issued to you by Agora. See [How to get the App ID](https://docs.agora.io/en/Agora%20Platform/token#getappid).
+         * Only users in apps with the same App ID can join the same channel and communicate with each other. Use an App ID to initialize only
+         * one `IRtcEngine` instance. To change your App ID, call {@link agora_gaming_rtc.IRtcEngine.Destroy Destroy} to destroy the current `IRtcEngine` instance and then call this method to initialize an `IRtcEngine` instance with the new App ID.
+         * 
+         * @return 
+         * - The IRtcEngine instance, if this method call succeeds.
+         * - The error code, if this method call fails.
+         *   - `ERR_INVALID_APP_ID (101)`: The App ID is invalid. Check if your App ID is in the correct format.
          */
         public static IRtcEngine GetEngine(string appId)
         {
@@ -2702,7 +3031,34 @@ namespace agora_gaming_rtc
             return instance;
         }
 
-        /** **DEPRECATED** Uses {@link agora_gaming_rtc.IRtcEngine.GetEngine GetEngine} instead.
+        /** Initializes an IRtcEngine instance.
+         * 
+         * Unless otherwise specified, all the methods provided by the IRtcEngine class are executed asynchronously. Agora recommends calling these methods in the same thread.
+         *
+         * @note 
+         * - You must initialize the IRtcEngine instance before calling any other method.
+         * - You can initialize an IRtcEngine instance either by calling this method or by calling {@link agora_gaming_rtc.IRtcEngine.GetEngine(string appId) GetEngine1}. The difference between `GetEngine1` and this method is that this method enables you to specify the connection area.
+         * - The Agora RTC Unity SDK supports initializing only one IRtcEngine instance for an app for now.
+         * 
+         * @param engineConfig Configurations for the IRtcEngine instance. For details, see #RtcEngineConfig.
+         * 
+         * @return 
+         * - The IRtcEngine instance, if this method call succeeds.
+         * - The error code, if this method call fails.
+         *   - `ERR_INVALID_APP_ID (101)`: The App ID is invalid. Check if your App ID is in the correct format.
+         */
+        public static IRtcEngine GetEngine(RtcEngineConfig engineConfig)
+        {
+            if (instance == null)
+            {
+                instance = new IRtcEngine(engineConfig);
+            }
+            return instance;
+        }
+        
+        /** Initializes the IRtcEngine.
+         *
+         * @deprecated Use {@link agora_gaming_rtc.IRtcEngine.GetEngine GetEngine} instead.
          * 
          * @param appId The App ID of your project.
          * 
@@ -2713,13 +3069,13 @@ namespace agora_gaming_rtc
             return GetEngine(appId);
         }
 
-        /** Destroys the IRtcEngine instance and releases all resources used by the Agora SDK.
+        /** Destroys the `IRtcEngine` instance and releases all resources used by the Agora RTC SDK.
          * 
-         * This method is useful for apps that occasionally make voice or video calls, to free up resources for other operations when not making calls.
+         * Use this method for apps in which users occasionally make voice or video calls. When users do not make calls, you can free up resources for other operations. Once you call `Destroy` to destroy the created `IRtcEngine` instance, you cannot use any method or callback in the SDK any more. If you want to use the real-time communication functions again, you must call {@link agora_gaming_rtc.IRtcEngine.GetEngine GetEngine} to initialize a new `RtcEngine` instance.
          * 
          * @note
-         * - Call this method in the subthread.
-         * - Once the app calls `Destroy` to destroy the created IRtcEngine instance, you cannot use any method or callback in the SDK.
+         * - Because `Destroy` is a synchronous method and the app cannot move on to another task until the execution completes, Agora suggests calling this method in a sub-thread to avoid congestion in the main thread. Besides, you **cannot** call `Destroy` in any method or callback of the SDK. Otherwise, the SDK cannot release the resources occupied by the `IRtcEngine` instance until the callbacks return results, which may result in a deadlock.
+         * - If you want to create a new `IRtcEngine` instance after destroying the current one, ensure that you wait till the `destroy` method completes executing.
          */
         public static void Destroy()
         {
@@ -2732,7 +3088,7 @@ namespace agora_gaming_rtc
                     am.SetEngine(null);
                     AudioEffectManagerImpl.ReleaseInstance();
                 }
-
+                
                 AudioRecordingDeviceManager adm = (AudioRecordingDeviceManager)instance.GetAudioRecordingDeviceManager();
                 if (adm != null)
                 {
@@ -2773,638 +3129,786 @@ namespace agora_gaming_rtc
                 {
                     vr.SetEngine(null);
                     VideoRender.ReleaseInstance();
-                }
+                } 
+            }
+            
+            IRtcEngineNative.deleteEngine();
+            AgoraChannel.Release();
+            
+            if (instance != null)
+            {
+                instance.DeInitGameObject();
             }
 
-            IRtcEngineNative.deleteEngine();
-            DeInitGameObject();
             instance = null;
+            GC.Collect();
         }
 
-        // only query, do not create
+        // only query, do not create 
+        /** Query the IRtcEngine instance.
+         *
+         * @note Call this method after calling {@link agora_gaming_rtc.IRtcEngine.GetEngine(string appId) GetEngine}.
+         *
+         * @return The IRtcEngine instance.
+         */
         public static IRtcEngine QueryEngine()
         {
             return instance;
         }
-
+        
         private static IRtcEngine instance = null;
 
         [MonoPInvokeCallback(typeof(OnJoinChannelSuccessHandler))]
         private static void OnJoinChannelSuccessCallback(string channel, uint uid, int elapsed)
         {
-            if (instance != null && instance.OnJoinChannelSuccess != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnJoinChannelSuccess != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnJoinChannelSuccess != null)
-                    {
-                        instance.OnJoinChannelSuccess(channel, uid, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnJoinChannelSuccess != null)
+                        { 
+                            instance.OnJoinChannelSuccess(channel, uid, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnLeaveChannelHandler))]
-        private static void OnLeaveChannelCallback(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage)
+        private static void OnLeaveChannelCallback(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes)
         {
-            if (instance != null && instance.OnLeaveChannel != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLeaveChannel != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLeaveChannel != null)
-                    {
-                        RtcStats rtcStats = new RtcStats();
-                        rtcStats.duration = duration;
-                        rtcStats.txBytes = txBytes;
-                        rtcStats.rxBytes = rxBytes;
-                        rtcStats.txAudioBytes = txAudioBytes;
-                        rtcStats.txVideoBytes = txVideoBytes;
-                        rtcStats.rxAudioBytes = rxAudioBytes;
-                        rtcStats.rxVideoBytes = rxVideoBytes;
-                        rtcStats.txKBitRate = txKBitRate;
-                        rtcStats.rxKBitRate = rxKBitRate;
-                        rtcStats.rxAudioKBitRate = rxAudioKBitRate;
-                        rtcStats.txAudioKBitRate = txAudioKBitRate;
-                        rtcStats.rxVideoKBitRate = rxVideoKBitRate;
-                        rtcStats.txVideoKBitRate = txVideoKBitRate;
-                        rtcStats.lastmileDelay = lastmileDelay;
-                        rtcStats.txPacketLossRate = txPacketLossRate;
-                        rtcStats.rxPacketLossRate = rxPacketLossRate;
-                        rtcStats.userCount = userCount;
-                        rtcStats.cpuAppUsage = cpuAppUsage;
-                        rtcStats.cpuTotalUsage = cpuTotalUsage;
-                        instance.OnLeaveChannel(rtcStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLeaveChannel != null)
+                        { 
+                            RtcStats rtcStats = new RtcStats();
+                            rtcStats.duration = duration;
+                            rtcStats.txBytes = txBytes;
+                            rtcStats.rxBytes = rxBytes;
+                            rtcStats.txAudioBytes = txAudioBytes;
+                            rtcStats.txVideoBytes = txVideoBytes;
+                            rtcStats.rxAudioBytes = rxAudioBytes;
+                            rtcStats.rxVideoBytes = rxVideoBytes;
+                            rtcStats.txKBitRate = txKBitRate;
+                            rtcStats.rxKBitRate = rxKBitRate;
+                            rtcStats.rxAudioKBitRate = rxAudioKBitRate;
+                            rtcStats.txAudioKBitRate = txAudioKBitRate;
+                            rtcStats.rxVideoKBitRate = rxVideoKBitRate;
+                            rtcStats.txVideoKBitRate = txVideoKBitRate;
+                            rtcStats.lastmileDelay = lastmileDelay;
+                            rtcStats.txPacketLossRate = txPacketLossRate;
+                            rtcStats.rxPacketLossRate = rxPacketLossRate;
+                            rtcStats.userCount = userCount;
+                            rtcStats.cpuAppUsage = cpuAppUsage;
+                            rtcStats.cpuTotalUsage = cpuTotalUsage;
+                            rtcStats.gatewayRtt = gatewayRtt;
+                            rtcStats.memoryAppUsageRatio = memoryAppUsageRatio;
+                            rtcStats.memoryTotalUsageRatio = memoryTotalUsageRatio;
+                            rtcStats.memoryAppUsageInKbytes = memoryAppUsageInKbytes;
+                            instance.OnLeaveChannel(rtcStats);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnReJoinChannelSuccessHandler))]
         private static void OnReJoinChannelSuccessCallback(string channelName, uint uid, int elapsed)
         {
-            if (instance != null && instance.OnReJoinChannelSuccess != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnReJoinChannelSuccess != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnReJoinChannelSuccess != null)
-                    {
-                        instance.OnReJoinChannelSuccess(channelName, uid, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnReJoinChannelSuccess != null)
+                        { 
+                            instance.OnReJoinChannelSuccess(channelName, uid, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnConnectionLostHandler))]
         private static void OnConnectionLostCallback()
         {
-            if (instance != null && instance.OnConnectionLost != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnConnectionLost != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnConnectionLost != null)
-                    {
-                        instance.OnConnectionLost();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnConnectionLost != null)
+                        { 
+                            instance.OnConnectionLost();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnConnectionInterruptedHandler))]
         private static void OnConnectionInterruptedCallback()
         {
-            if (instance != null && instance.OnConnectionInterrupted != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnConnectionInterrupted != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnConnectionInterrupted != null)
-                    {
-                        instance.OnConnectionInterrupted();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnConnectionInterrupted != null)
+                        { 
+                            instance.OnConnectionInterrupted();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnRequestTokenHandler))]
         private static void OnRequestTokenCallback()
         {
-            if (instance != null && instance.OnRequestToken != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRequestToken != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRequestToken != null)
-                    {
-                        instance.OnRequestToken();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRequestToken != null)
+                        { 
+                            instance.OnRequestToken();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnUserJoinedHandler))]
         private static void OnUserJoinedCallback(uint uid, int elapsed)
         {
-            if (instance != null && instance.OnUserJoined != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserJoined != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserJoined != null)
-                    {
-                        instance.OnUserJoined(uid, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserJoined != null)
+                        { 
+                            instance.OnUserJoined(uid, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnUserOfflineHandler))]
         private static void OnUserOfflineCallback(uint uid, int reason)
         {
-            if (instance != null && instance.OnUserOffline != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserOffline != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserOffline != null)
-                    {
-                        instance.OnUserOffline(uid, (USER_OFFLINE_REASON)reason);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserOffline != null)
+                        { 
+                            instance.OnUserOffline(uid, (USER_OFFLINE_REASON)reason);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnAudioVolumeIndicationHandler))]
         private static void OnAudioVolumeIndicationCallback(string volumeInfo, int speakerNumber, int totalVolume)
         {
-            if (instance != null && instance.OnVolumeIndication != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnVolumeIndication != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnVolumeIndication != null)
-                    {
-                        string[] sArray = volumeInfo.Split('\t');
-                        int j = 1;
-                        AudioVolumeInfo[] infos = new AudioVolumeInfo[speakerNumber];
-                        if (speakerNumber > 0)
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnVolumeIndication != null)
                         {
-                            for (int i = 0; i < speakerNumber; i++)
+                            string[] sArray = volumeInfo.Split('\t');
+                            int j = 1;
+                            AudioVolumeInfo[] infos = new AudioVolumeInfo[speakerNumber];
+                            if (speakerNumber > 0)
                             {
-                                uint uids = (uint)int.Parse(sArray[j++]);
-                                uint vol = (uint)int.Parse(sArray[j++]);
-                                uint vad = (uint)int.Parse(sArray[j++]);
-                                infos[i].uid = uids;
-                                infos[i].volume = vol;
-                                infos[i].vad = vad;
+                                for (int i = 0; i < speakerNumber; i++)
+                                {
+                                    uint uids = (uint)int.Parse(sArray[j++]);
+                                    uint vol = (uint)int.Parse(sArray[j++]);
+                                    uint vad = (uint)int.Parse(sArray[j++]);
+                                    string channelId = sArray[j++];
+                                    infos[i].uid = uids;
+                                    infos[i].volume = vol;
+                                    infos[i].vad = vad;
+                                    infos[i].channelId = channelId;
+                                }
                             }
+                            instance.OnVolumeIndication(infos, speakerNumber, totalVolume);
                         }
-                        instance.OnVolumeIndication(infos, speakerNumber, totalVolume);
-                    }
-                });
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnUserMutedAudioHandler))]
         private static void OnUserMuteAudioCallback(uint uid, bool muted)
         {
-            if (instance != null && instance.OnUserMutedAudio != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserMutedAudio != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserMutedAudio != null)
-                    {
-                        instance.OnUserMutedAudio(uid, muted);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserMutedAudio != null)
+                        { 
+                            instance.OnUserMutedAudio(uid, muted);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnSDKWarningHandler))]
         private static void OnSDKWarningCallback(int warn, string msg)
         {
-            if (instance != null && instance.OnWarning != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnWarning != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnWarning != null)
-                    {
-                        instance.OnWarning(warn, msg);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnWarning != null)
+                        {
+                            instance.OnWarning(warn, msg);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnSDKErrorHandler))]
         private static void OnSDKErrorCallback(int error, string msg)
         {
-            if (instance != null && instance.OnError != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnError != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnError != null)
-                    {
-                        instance.OnError(error, msg);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnError != null)
+                        { 
+                            instance.OnError(error, msg);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnRtcStatsHandler))]
-        private static void OnRtcStatsCallback(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage)
+        private static void OnRtcStatsCallback(uint duration, uint txBytes, uint rxBytes, uint txAudioBytes, uint txVideoBytes, uint rxAudioBytes, uint rxVideoBytes, ushort txKBitRate, ushort rxKBitRate, ushort rxAudioKBitRate, ushort txAudioKBitRate, ushort rxVideoKBitRate, ushort txVideoKBitRate, ushort lastmileDelay, ushort txPacketLossRate, ushort rxPacketLossRate, uint userCount, double cpuAppUsage, double cpuTotalUsage, int gatewayRtt, double memoryAppUsageRatio, double memoryTotalUsageRatio, int memoryAppUsageInKbytes)
         {
-            if (instance != null && instance.OnRtcStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRtcStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRtcStats != null)
-                    {
-                        RtcStats rtcStats = new RtcStats();
-                        rtcStats.duration = duration;
-                        rtcStats.txBytes = txBytes;
-                        rtcStats.rxBytes = rxBytes;
-                        rtcStats.txAudioBytes = txAudioBytes;
-                        rtcStats.txVideoBytes = txVideoBytes;
-                        rtcStats.rxAudioBytes = rxAudioBytes;
-                        rtcStats.rxVideoBytes = rxVideoBytes;
-                        rtcStats.txKBitRate = txKBitRate;
-                        rtcStats.rxKBitRate = rxKBitRate;
-                        rtcStats.rxAudioKBitRate = rxAudioKBitRate;
-                        rtcStats.txAudioKBitRate = txAudioKBitRate;
-                        rtcStats.rxVideoKBitRate = rxVideoKBitRate;
-                        rtcStats.txVideoKBitRate = txVideoKBitRate;
-                        rtcStats.lastmileDelay = lastmileDelay;
-                        rtcStats.txPacketLossRate = txPacketLossRate;
-                        rtcStats.rxPacketLossRate = rxPacketLossRate;
-                        rtcStats.userCount = userCount;
-                        rtcStats.cpuAppUsage = cpuAppUsage;
-                        rtcStats.cpuTotalUsage = cpuTotalUsage;
-                        instance.OnRtcStats(rtcStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRtcStats != null)
+                        {
+                            RtcStats rtcStats = new RtcStats();
+                            rtcStats.duration = duration;
+                            rtcStats.txBytes = txBytes;
+                            rtcStats.rxBytes = rxBytes;
+                            rtcStats.txAudioBytes = txAudioBytes;
+                            rtcStats.txVideoBytes = txVideoBytes;
+                            rtcStats.rxAudioBytes = rxAudioBytes;
+                            rtcStats.rxVideoBytes = rxVideoBytes;
+                            rtcStats.txKBitRate = txKBitRate;
+                            rtcStats.rxKBitRate = rxKBitRate;
+                            rtcStats.rxAudioKBitRate = rxAudioKBitRate;
+                            rtcStats.txAudioKBitRate = txAudioKBitRate;
+                            rtcStats.rxVideoKBitRate = rxVideoKBitRate;
+                            rtcStats.txVideoKBitRate = txVideoKBitRate;
+                            rtcStats.lastmileDelay = lastmileDelay;
+                            rtcStats.txPacketLossRate = txPacketLossRate;
+                            rtcStats.rxPacketLossRate = rxPacketLossRate;
+                            rtcStats.userCount = userCount;
+                            rtcStats.cpuAppUsage = cpuAppUsage;
+                            rtcStats.cpuTotalUsage = cpuTotalUsage;
+                            rtcStats.gatewayRtt = gatewayRtt;
+                            rtcStats.memoryAppUsageRatio = memoryAppUsageRatio;
+                            rtcStats.memoryTotalUsageRatio = memoryTotalUsageRatio;
+                            rtcStats.memoryAppUsageInKbytes = memoryAppUsageInKbytes;
+                            instance.OnRtcStats(rtcStats);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnAudioMixingFinishedHandler))]
         private static void OnAudioMixingFinishedCallback()
         {
-            if (instance != null && instance.OnAudioMixingFinished != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioMixingFinished != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioMixingFinished != null)
-                    {
-                        instance.OnAudioMixingFinished();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioMixingFinished != null)
+                        { 
+                            instance.OnAudioMixingFinished();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnAudioRouteChangedHandler))]
         private static void OnAudioRouteChangedCallback(int route)
         {
-            if (instance != null && instance.OnAudioRouteChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioRouteChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioRouteChanged != null)
-                    {
-                        instance.OnAudioRouteChanged((AUDIO_ROUTE)route);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioRouteChanged != null)
+                        { 
+                            instance.OnAudioRouteChanged((AUDIO_ROUTE)route);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstRemoteVideoDecodedHandler))]
         private static void OnFirstRemoteVideoDecodedCallback(uint uid, int width, int height, int elapsed)
         {
-            if (instance != null && instance.OnFirstRemoteVideoDecoded != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstRemoteVideoDecoded != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstRemoteVideoDecoded != null)
-                    {
-                        instance.OnFirstRemoteVideoDecoded(uid, width, height, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstRemoteVideoDecoded != null)
+                        { 
+                            instance.OnFirstRemoteVideoDecoded(uid, width, height, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnVideoSizeChangedHandler))]
         private static void OnVideoSizeChangedCallback(uint uid, int width, int height, int rotation)
         {
-            if (instance != null && instance.OnVideoSizeChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnVideoSizeChanged != null && instance._AgoraCallbackObject != null)
             {
-
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
+                {
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnVideoSizeChanged != null)
+                        { 
+                            instance.OnVideoSizeChanged(uid, width, height, rotation);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnClientRoleChanged))]
         private static void OnClientRoleChangedCallback(int oldRole, int newRole)
         {
-            if (instance != null && instance.OnClientRoleChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnClientRoleChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnClientRoleChanged != null)
-                    {
-                        instance.OnClientRoleChanged((CLIENT_ROLE_TYPE)oldRole, (CLIENT_ROLE_TYPE)newRole);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnClientRoleChanged != null)
+                        { 
+                            instance.OnClientRoleChanged((CLIENT_ROLE_TYPE)oldRole, (CLIENT_ROLE_TYPE)newRole);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnUserMuteVideoHandler))]
         private static void OnUserMuteVideoCallback(uint uid, bool muted)
         {
-            if (instance != null && instance.OnUserMuteVideo != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserMuteVideo != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserMuteVideo != null)
-                    {
-                        instance.OnUserMuteVideo(uid, muted);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserMuteVideo != null)
+                        { 
+                            instance.OnUserMuteVideo(uid, muted);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnMicrophoneEnabledHandler))]
         private static void OnMicrophoneEnabledCallback(bool isEnabled)
         {
-            if (instance != null && instance.OnMicrophoneEnabled != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnMicrophoneEnabled != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnMicrophoneEnabled != null)
-                    {
-                        instance.OnMicrophoneEnabled(isEnabled);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnMicrophoneEnabled != null)
+                        { 
+                            instance.OnMicrophoneEnabled(isEnabled);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnApiExecutedHandler))]
         private static void OnApiExecutedCallback(int err, string api, string result)
         {
-            if (instance != null && instance.OnApiExecuted != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnApiExecuted != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnApiExecuted != null)
-                    {
-                        instance.OnApiExecuted(err, api, result);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnApiExecuted != null)
+                        { 
+                            instance.OnApiExecuted(err, api, result);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstLocalAudioFrameHandler))]
         private static void OnFirstLocalAudioFrameCallback(int elapsed)
         {
-            if (instance != null && instance.OnFirstLocalAudioFrame != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstLocalAudioFrame != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstLocalAudioFrame != null)
-                    {
-                        instance.OnFirstLocalAudioFrame(elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstLocalAudioFrame != null)
+                        { 
+                            instance.OnFirstLocalAudioFrame(elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstRemoteAudioFrameHandler))]
         private static void OnFirstRemoteAudioFrameCallback(uint userId, int elapsed)
         {
-            if (instance != null && instance.OnFirstRemoteAudioFrame != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstRemoteAudioFrame != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstRemoteAudioFrame != null)
-                    {
-                        instance.OnFirstRemoteAudioFrame(userId, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstRemoteAudioFrame != null)
+                        { 
+                            instance.OnFirstRemoteAudioFrame(userId, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnLastmileQualityHandler))]
         private static void OnLastmileQualityCallback(int quality)
         {
-            if (instance != null && instance.OnLastmileQuality != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLastmileQuality != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLastmileQuality != null)
-                    {
-                        instance.OnLastmileQuality(quality);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLastmileQuality != null)
+                        { 
+                            instance.OnLastmileQuality(quality);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnAudioQualityHandler))]
         private static void OnAudioQualityCallback(uint userId, int quality, ushort delay, ushort lost)
         {
-            if (instance != null && instance.OnAudioQuality != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioQuality != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioQuality != null)
-                    {
-                        instance.OnAudioQuality(userId, quality, delay, lost);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioQuality != null)
+                        { 
+                            instance.OnAudioQuality(userId, quality, delay, lost);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnStreamInjectedStatusHandler))]
         private static void OnStreamInjectedStatusCallback(string url, uint userId, int status)
         {
-            if (instance != null && instance.OnStreamInjectedStatus != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnStreamInjectedStatus != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnStreamInjectedStatus != null)
-                    {
-                        instance.OnStreamInjectedStatus(url, userId, status);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnStreamInjectedStatus != null)
+                        {
+                            instance.OnStreamInjectedStatus(url, userId, status);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnStreamUnpublishedHandler))]
         private static void OnStreamUnpublishedCallback(string url)
         {
-            if (instance != null && instance.OnStreamUnpublished != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnStreamUnpublished != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnStreamUnpublished != null)
-                    {
-                        instance.OnStreamUnpublished(url);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnStreamUnpublished != null)
+                        { 
+                            instance.OnStreamUnpublished(url);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnStreamPublishedHandler))]
         private static void OnStreamPublishedCallback(string url, int error)
         {
-            if (instance != null && instance.OnStreamPublished != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnStreamPublished != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnStreamPublished != null)
-                    {
-                        instance.OnStreamPublished(url, error);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnStreamPublished != null)
+                        { 
+                            instance.OnStreamPublished(url, error);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnStreamMessageErrorHandler))]
         private static void OnStreamMessageErrorCallback(uint userId, int streamId, int code, int missed, int cached)
         {
-            if (instance != null && instance.OnStreamMessageError != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnStreamMessageError != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnStreamMessageError != null)
-                    {
-                        instance.OnStreamMessageError(userId, streamId, code, missed, cached);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnStreamMessageError != null)
+                        { 
+                            instance.OnStreamMessageError(userId, streamId, code, missed,cached);
+                        }
+                    });
+                }
             }
         }
 
-        [MonoPInvokeCallback(typeof(OnStreamMessageHandler))]
-        private static void OnStreamMessageCallback(uint userId, int streamId, string data, int length)
+        [MonoPInvokeCallback(typeof(EngineEventOnStreamMessageHandler))]
+        private static void OnStreamMessageCallback(uint userId, int streamId, IntPtr data, int length)
         {
-            if (instance != null && instance.OnStreamMessage != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnStreamMessage != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                byte[] byteBuffer = null;
+                if (length > 0 && data != IntPtr.Zero) {
+                    byteBuffer = new byte[length];
+                    Marshal.Copy(data, byteBuffer, 0, length);
+                }
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnStreamMessage != null)
-                    {
-                        instance.OnStreamMessage(userId, streamId, data, length);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnStreamMessage != null)
+                        { 
+                            instance.OnStreamMessage(userId, streamId, byteBuffer, length);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnConnectionBannedHandler))]
         private static void OnConnectionBannedCallback()
         {
-            if (instance != null && instance.OnConnectionBanned != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnConnectionBanned != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnConnectionBanned != null)
-                    {
-                        instance.OnConnectionBanned();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnConnectionBanned != null)
+                        {
+                            instance.OnConnectionBanned();
+                        }    
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnConnectionStateChanged))]
         private static void OnConnectionStateChangedCallback(int state, int reason)
         {
-            if (instance != null && instance.OnConnectionStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnConnectionStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnConnectionStateChanged != null)
-                    {
-                        instance.OnConnectionStateChanged((CONNECTION_STATE_TYPE)state, (CONNECTION_CHANGED_REASON_TYPE)reason);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnConnectionStateChanged != null)
+                        {
+                            instance.OnConnectionStateChanged((CONNECTION_STATE_TYPE)state, (CONNECTION_CHANGED_REASON_TYPE)reason);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnTokenPrivilegeWillExpireHandler))]
         private static void OnTokenPrivilegeWillExpireCallback(string token)
         {
-            if (instance != null && instance.OnTokenPrivilegeWillExpire != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnTokenPrivilegeWillExpire != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnTokenPrivilegeWillExpire != null)
-                    {
-                        instance.OnTokenPrivilegeWillExpire(token);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnTokenPrivilegeWillExpire != null)
+                        { 
+                            instance.OnTokenPrivilegeWillExpire(token);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnActiveSpeakerHandler))]
         private static void OnActiveSpeakerCallback(uint uid)
         {
-            if (instance != null && instance.OnActiveSpeaker != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnActiveSpeaker != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnActiveSpeaker != null)
-                    {
-                        instance.OnActiveSpeaker(uid);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnActiveSpeaker != null)
+                        {
+                            instance.OnActiveSpeaker(uid);
+                        }          
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnVideoStoppedHandler))]
         private static void OnVideoStoppedCallback()
         {
-            if (instance != null && instance.OnVideoStopped != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnVideoStopped != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnVideoStopped != null)
-                    {
-                        instance.OnVideoStopped();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnVideoStopped != null)
+                        { 
+                            instance.OnVideoStopped();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstLocalVideoFrameHandler))]
         private static void OnFirstLocalVideoFrameCallback(int width, int height, int elapsed)
         {
-            if (instance != null && instance.OnFirstLocalVideoFrame != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstLocalVideoFrame != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstLocalVideoFrame != null)
-                    {
-                        instance.OnFirstLocalVideoFrame(width, height, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstLocalVideoFrame != null)
+                        { 
+                            instance.OnFirstLocalVideoFrame(width, height, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstRemoteVideoFrameHandler))]
         private static void OnFirstRemoteVideoFrameCallback(uint uid, int width, int height, int elapsed)
         {
-            if (instance != null && instance.OnFirstRemoteVideoFrame != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstRemoteVideoFrame != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstRemoteVideoFrame != null)
-                    {
-                        instance.OnFirstRemoteVideoFrame(uid, width, height, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstRemoteVideoFrame != null)
+                        { 
+                            instance.OnFirstRemoteVideoFrame(uid, width, height, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnUserEnableVideoHandler))]
         private static void OnUserEnableVideoCallback(uint uid, bool enabled)
         {
-            if (instance != null && instance.OnUserEnableVideo != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserEnableVideo != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserEnableVideo != null)
-                    {
-                        instance.OnUserEnableVideo(uid, enabled);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserEnableVideo != null)
+                        { 
+                            instance.OnUserEnableVideo(uid, enabled);
+                        }
+                    });
+                }
             }
         }
 
@@ -3412,30 +3916,36 @@ namespace agora_gaming_rtc
         [MonoPInvokeCallback(typeof(OnUserEnableLocalVideoHandler))]
         private static void OnUserEnableLocalVideoCallback(uint uid, bool enabled)
         {
-            if (instance != null && instance.OnUserEnableLocalVideo != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserEnableLocalVideo != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserEnableLocalVideo != null)
-                    {
-                        instance.OnUserEnableLocalVideo(uid, enabled);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserEnableLocalVideo != null)
+                        { 
+                            instance.OnUserEnableLocalVideo(uid, enabled);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnRemoteVideoStateChanged))]
         private static void OnRemoteVideoStateChangedCallback(uint uid, int state, int reason, int elapsed)
         {
-            if (instance != null && instance.OnRemoteVideoStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteVideoStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteVideoStateChanged != null)
-                    {
-                        instance.OnRemoteVideoStateChanged(uid, (REMOTE_VIDEO_STATE)state, (REMOTE_VIDEO_STATE_REASON)reason, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteVideoStateChanged != null)
+                        { 
+                            instance.OnRemoteVideoStateChanged(uid, (REMOTE_VIDEO_STATE)state, (REMOTE_VIDEO_STATE_REASON)reason, elapsed);
+                        }
+                    });
+                }
             }
         }
 
@@ -3443,30 +3953,36 @@ namespace agora_gaming_rtc
         [MonoPInvokeCallback(typeof(OnLocalPublishFallbackToAudioOnlyHandler))]
         private static void OnLocalPublishFallbackToAudioOnlyCallback(bool isFallbackOrRecover)
         {
-            if (instance != null && instance.OnLocalPublishFallbackToAudioOnly != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalPublishFallbackToAudioOnly != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalPublishFallbackToAudioOnly != null)
-                    {
-                        instance.OnLocalPublishFallbackToAudioOnly(isFallbackOrRecover);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalPublishFallbackToAudioOnly != null)
+                        { 
+                            instance.OnLocalPublishFallbackToAudioOnly(isFallbackOrRecover);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnRemoteSubscribeFallbackToAudioOnlyHandler))]
         private static void OnRemoteSubscribeFallbackToAudioOnlyCallback(uint uid, bool isFallbackOrRecover)
         {
-            if (instance != null && instance.OnRemoteSubscribeFallbackToAudioOnly != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteSubscribeFallbackToAudioOnly != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteSubscribeFallbackToAudioOnly != null)
-                    {
-                        instance.OnRemoteSubscribeFallbackToAudioOnly(uid, isFallbackOrRecover);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteSubscribeFallbackToAudioOnly != null)
+                        { 
+                            instance.OnRemoteSubscribeFallbackToAudioOnly(uid, isFallbackOrRecover);
+                        }
+                    });
+                }
             }
         }
 
@@ -3474,527 +3990,645 @@ namespace agora_gaming_rtc
         [MonoPInvokeCallback(typeof(OnNetworkQualityHandler))]
         private static void OnNetworkQualityCallback(uint uid, int txQuality, int rxQuality)
         {
-            if (instance != null && instance.OnNetworkQuality != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnNetworkQuality != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnNetworkQuality != null)
-                    {
-                        instance.OnNetworkQuality(uid, txQuality, rxQuality);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnNetworkQuality != null)
+                        { 
+                            instance.OnNetworkQuality(uid, txQuality, rxQuality);
+                        }
+                    });
+                }
             }
-        }
+        }  
 
         [MonoPInvokeCallback(typeof(EngineEventOnLocalVideoStatsHandler))]
         private static void OnLocalVideoStatsCallback(int sentBitrate, int sentFrameRate, int encoderOutputFrameRate, int rendererOutputFrameRate, int targetBitrate, int targetFrameRate, int qualityAdaptIndication, int encodedBitrate, int encodedFrameWidth, int encodedFrameHeight, int encodedFrameCount, int codecType)
         {
-            if (instance != null && instance.OnLocalVideoStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalVideoStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalVideoStats != null)
-                    {
-                        LocalVideoStats localVideoStats = new LocalVideoStats();
-                        localVideoStats.sentBitrate = sentBitrate;
-                        localVideoStats.sentFrameRate = sentFrameRate;
-                        localVideoStats.encoderOutputFrameRate = encoderOutputFrameRate;
-                        localVideoStats.rendererOutputFrameRate = rendererOutputFrameRate;
-                        localVideoStats.targetBitrate = targetBitrate;
-                        localVideoStats.targetFrameRate = targetFrameRate;
-                        localVideoStats.qualityAdaptIndication = (QUALITY_ADAPT_INDICATION)qualityAdaptIndication;
-                        localVideoStats.encodedBitrate = encodedBitrate;
-                        localVideoStats.encodedFrameWidth = encodedFrameWidth;
-                        localVideoStats.encodedFrameHeight = encodedFrameHeight;
-                        localVideoStats.encodedFrameCount = encodedFrameCount;
-                        localVideoStats.codecType = (VIDEO_CODEC_TYPE)codecType;
-                        instance.OnLocalVideoStats(localVideoStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalVideoStats != null)
+                        { 
+                            LocalVideoStats localVideoStats = new LocalVideoStats();
+                            localVideoStats.sentBitrate = sentBitrate;
+                            localVideoStats.sentFrameRate = sentFrameRate;
+                            localVideoStats.encoderOutputFrameRate = encoderOutputFrameRate;
+                            localVideoStats.rendererOutputFrameRate = rendererOutputFrameRate;
+                            localVideoStats.targetBitrate = targetBitrate;
+                            localVideoStats.targetFrameRate = targetFrameRate;
+                            localVideoStats.qualityAdaptIndication = (QUALITY_ADAPT_INDICATION)qualityAdaptIndication;
+                            localVideoStats.encodedBitrate = encodedBitrate;
+                            localVideoStats.encodedFrameWidth = encodedFrameWidth;
+                            localVideoStats.encodedFrameHeight = encodedFrameHeight;
+                            localVideoStats.encodedFrameCount = encodedFrameCount;
+                            localVideoStats.codecType = (VIDEO_CODEC_TYPE)codecType;
+                            instance.OnLocalVideoStats(localVideoStats);
+                        }
+                    });
+                }
             }
-        }
+        }  
 
         [MonoPInvokeCallback(typeof(EngineEventOnRemoteVideoStatsHandler))]
-        private static void OnRemoteVideoStatsCallback(uint uid, int delay, int width, int height, int receivedBitrate, int decoderOutputFrameRate, int rendererOutputFrameRate, int remoteVideoStreamType, int packetLossRate, int totalFrozenTime, int frozenRate)
+        private static void OnRemoteVideoStatsCallback(uint uid, int delay, int width, int height, int receivedBitrate, int decoderOutputFrameRate, int rendererOutputFrameRate, int packetLossRate, int rxStreamType, int totalFrozenTime, int frozenRate, int totalActiveTime)
         {
-            if (instance != null && instance.OnRemoteVideoStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteVideoStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteVideoStats != null)
-                    {
-                        RemoteVideoStats remoteVideoStats = new RemoteVideoStats();
-                        remoteVideoStats.uid = uid;
-                        remoteVideoStats.delay = delay;
-                        remoteVideoStats.width = width;
-                        remoteVideoStats.height = height;
-                        remoteVideoStats.receivedBitrate = receivedBitrate;
-                        remoteVideoStats.decoderOutputFrameRate = decoderOutputFrameRate;
-                        remoteVideoStats.rendererOutputFrameRate = rendererOutputFrameRate;
-                        remoteVideoStats.rxStreamType = (REMOTE_VIDEO_STREAM_TYPE)remoteVideoStreamType;
-                        remoteVideoStats.packetLossRate = packetLossRate;
-                        remoteVideoStats.totalFrozenTime = totalFrozenTime;
-                        remoteVideoStats.frozenRate = frozenRate;
-                        instance.OnRemoteVideoStats(remoteVideoStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteVideoStats != null)
+                        { 
+                            RemoteVideoStats remoteVideoStats = new RemoteVideoStats();
+                            remoteVideoStats.uid = uid;
+                            remoteVideoStats.delay = delay;
+                            remoteVideoStats.width = width;
+                            remoteVideoStats.height = height;
+                            remoteVideoStats.receivedBitrate = receivedBitrate;
+                            remoteVideoStats.decoderOutputFrameRate = decoderOutputFrameRate;
+                            remoteVideoStats.rendererOutputFrameRate = rendererOutputFrameRate;
+                            remoteVideoStats.packetLossRate = packetLossRate;
+                            remoteVideoStats.rxStreamType = (REMOTE_VIDEO_STREAM_TYPE)rxStreamType;
+                            remoteVideoStats.totalFrozenTime = totalFrozenTime;
+                            remoteVideoStats.frozenRate = frozenRate;
+                            remoteVideoStats.totalActiveTime = totalActiveTime;
+                            instance.OnRemoteVideoStats(remoteVideoStats);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(EngineEventOnRemoteAudioStatsHandler))]
-        private static void OnRemoteAudioStatsCallback(uint uid, int quality, int networkTransportDelay, int jitterBufferDelay, int audioLossRate, int numChannels, int receivedSampleRate, int receivedBitrate, int totalFrozenTime, int frozenRate)
+        private static void OnRemoteAudioStatsCallback(uint uid, int quality, int networkTransportDelay, int jitterBufferDelay, int audioLossRate, int numChannels, int receivedSampleRate, int receivedBitrate, int totalFrozenTime, int frozenRate, int totalActiveTime)
         {
-            if (instance != null && instance.OnRemoteAudioStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteAudioStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteAudioStats != null)
-                    {
-                        RemoteAudioStats remoteAudioStats = new RemoteAudioStats();
-                        remoteAudioStats.uid = uid;
-                        remoteAudioStats.quality = quality;
-                        remoteAudioStats.networkTransportDelay = networkTransportDelay;
-                        remoteAudioStats.jitterBufferDelay = jitterBufferDelay;
-                        remoteAudioStats.audioLossRate = audioLossRate;
-                        remoteAudioStats.numChannels = numChannels;
-                        remoteAudioStats.receivedSampleRate = receivedSampleRate;
-                        remoteAudioStats.receivedBitrate = receivedBitrate;
-                        remoteAudioStats.totalFrozenTime = totalFrozenTime;
-                        remoteAudioStats.frozenRate = frozenRate;
-                        instance.OnRemoteAudioStats(remoteAudioStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteAudioStats != null)
+                        {
+                            RemoteAudioStats remoteAudioStats = new RemoteAudioStats();
+                            remoteAudioStats.uid = uid;
+                            remoteAudioStats.quality = quality;
+                            remoteAudioStats.networkTransportDelay = networkTransportDelay;
+                            remoteAudioStats.jitterBufferDelay = jitterBufferDelay;
+                            remoteAudioStats.audioLossRate = audioLossRate;
+                            remoteAudioStats.numChannels = numChannels;
+                            remoteAudioStats.receivedSampleRate = receivedSampleRate;
+                            remoteAudioStats.receivedBitrate = receivedBitrate;
+                            remoteAudioStats.totalFrozenTime = totalFrozenTime;
+                            remoteAudioStats.frozenRate = frozenRate;
+                            remoteAudioStats.totalActiveTime = totalActiveTime;
+                            instance.OnRemoteAudioStats(remoteAudioStats);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnAudioDeviceStateChangedHandler))]
         private static void OnAudioDeviceStateChangedCallback(string deviceId, int deviceType, int deviceState)
         {
-            if (instance != null && instance.OnAudioDeviceStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioDeviceStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioDeviceStateChanged != null)
-                    {
-                        instance.OnAudioDeviceStateChanged(deviceId, deviceType, deviceState);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioDeviceStateChanged != null)
+                        { 
+                            instance.OnAudioDeviceStateChanged(deviceId, deviceType, deviceState);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnCameraReadyHandler))]
         private static void OnCameraReadyCallback()
         {
-            if (instance != null && instance.OnCameraReady != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnCameraReady != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnCameraReady != null)
-                    {
-                        instance.OnCameraReady();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnCameraReady != null)
+                        { 
+                            instance.OnCameraReady();
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnCameraFocusAreaChangedHandler))]
         private static void OnCameraFocusAreaChangedCallback(int x, int y, int width, int height)
         {
-            if (instance != null && instance.OnCameraFocusAreaChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnCameraFocusAreaChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnCameraFocusAreaChanged != null)
-                    {
-                        instance.OnCameraExposureAreaChanged(x, y, width, height);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnCameraFocusAreaChanged != null)
+                        { 
+                            instance.OnCameraExposureAreaChanged(x, y, width, height);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnCameraExposureAreaChangedHandler))]
         private static void OnCameraExposureAreaChangedCallback(int x, int y, int width, int height)
         {
-            if (instance != null && instance.OnCameraExposureAreaChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnCameraExposureAreaChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnCameraExposureAreaChanged != null)
-                    {
-                        instance.OnCameraExposureAreaChanged(x, y, width, height);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnCameraExposureAreaChanged != null)
+                        { 
+                            instance.OnCameraExposureAreaChanged(x, y, width, height);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnRemoteAudioMixingBeginHandler))]
         private static void OnRemoteAudioMixingBeginCallback()
         {
-            if (instance != null && instance.OnRemoteAudioMixingBegin != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteAudioMixingBegin != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteAudioMixingBegin != null)
-                    {
-                        instance.OnRemoteAudioMixingBegin();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteAudioMixingBegin != null)
+                        { 
+                            instance.OnRemoteAudioMixingBegin();
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnRemoteAudioMixingEndHandler))]
         private static void OnRemoteAudioMixingEndCallback()
         {
-            if (instance != null && instance.OnRemoteAudioMixingEnd != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteAudioMixingEnd != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteAudioMixingEnd != null)
-                    {
-                        instance.OnRemoteAudioMixingEnd();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteAudioMixingEnd != null)
+                        { 
+                            instance.OnRemoteAudioMixingEnd();
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnAudioEffectFinishedHandler))]
         private static void OnAudioEffectFinishedCallback(int soundId)
         {
-            if (instance != null && instance.OnAudioEffectFinished != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioEffectFinished != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioEffectFinished != null)
-                    {
-                        instance.OnAudioEffectFinished(soundId);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioEffectFinished != null)
+                        { 
+                            instance.OnAudioEffectFinished(soundId);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(OnVideoDeviceStateChangedHandler))]
+       [MonoPInvokeCallback(typeof(OnVideoDeviceStateChangedHandler))]
         private static void OnVideoDeviceStateChangedCallback(string deviceId, int deviceType, int deviceState)
         {
-            if (instance != null && instance.OnVideoDeviceStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnVideoDeviceStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnVideoDeviceStateChanged != null)
-                    {
-                        instance.OnVideoDeviceStateChanged(deviceId, deviceType, deviceState);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnVideoDeviceStateChanged != null)
+                        { 
+                            instance.OnVideoDeviceStateChanged(deviceId, deviceType, deviceState);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(OnRemoteVideoTransportStatsHandler))]
+       [MonoPInvokeCallback(typeof(OnRemoteVideoTransportStatsHandler))]
         private static void OnRemoteVideoTransportStatsCallback(uint uid, ushort delay, ushort lost, ushort rxKBitRate)
         {
-            if (instance != null && instance.OnRemoteVideoTransportStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteVideoTransportStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteVideoTransportStats != null)
-                    {
-                        instance.OnRemoteVideoTransportStats(uid, delay, lost, rxKBitRate);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteVideoTransportStats != null)
+                        { 
+                            instance.OnRemoteVideoTransportStats(uid, delay, lost, rxKBitRate);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
         [MonoPInvokeCallback(typeof(OnRemoteAudioTransportStatsHandler))]
         private static void OnRemoteAudioTransportStatsCallback(uint uid, ushort delay, ushort lost, ushort rxKBitRate)
         {
-            if (instance != null && instance.OnRemoteAudioTransportStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteAudioTransportStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteAudioTransportStats != null)
-                    {
-                        instance.OnRemoteAudioTransportStats(uid, delay, lost, rxKBitRate);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteAudioTransportStats != null)
+                        { 
+                            instance.OnRemoteAudioTransportStats(uid, delay, lost, rxKBitRate);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(OnTranscodingUpdatedHandler))]
+       [MonoPInvokeCallback(typeof(OnTranscodingUpdatedHandler))]
         private static void OnTranscodingUpdatedCallback()
         {
-            if (instance != null && instance.OnTranscodingUpdated != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnTranscodingUpdated != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnTranscodingUpdated != null)
-                    {
-                        instance.OnTranscodingUpdated();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnTranscodingUpdated != null)
+                        { 
+                            instance.OnTranscodingUpdated();
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(EngineEventOnAudioDeviceVolumeChangedHandler))]
+       [MonoPInvokeCallback(typeof(EngineEventOnAudioDeviceVolumeChangedHandler))]
         private static void OnAudioDeviceVolumeChangedCallback(int deviceType, int volume, bool muted)
         {
-            if (instance != null && instance.OnAudioDeviceVolumeChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioDeviceVolumeChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioDeviceVolumeChanged != null)
-                    {
-                        instance.OnAudioDeviceVolumeChanged((MEDIA_DEVICE_TYPE)deviceType, volume, muted);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioDeviceVolumeChanged != null)
+                        { 
+                            instance.OnAudioDeviceVolumeChanged((MEDIA_DEVICE_TYPE)deviceType, volume, muted);
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(OnMediaEngineStartCallSuccessHandler))]
+       [MonoPInvokeCallback(typeof(OnMediaEngineStartCallSuccessHandler))]
         private static void OnMediaEngineStartCallSuccessCallback()
         {
-            if (instance != null && instance.OnMediaEngineStartCallSuccess != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnMediaEngineStartCallSuccess != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnMediaEngineStartCallSuccess != null)
-                    {
-                        instance.OnMediaEngineStartCallSuccess();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnMediaEngineStartCallSuccess != null)
+                        { 
+                            instance.OnMediaEngineStartCallSuccess();
+                        }
+                    });
+                }
             }
-        }
+        } 
 
-        [MonoPInvokeCallback(typeof(OnMediaEngineLoadSuccessHandler))]
+       [MonoPInvokeCallback(typeof(OnMediaEngineLoadSuccessHandler))]
         private static void OnMediaEngineLoadSuccessCallback()
         {
-            if (instance != null && instance.OnMediaEngineLoadSuccess != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnMediaEngineLoadSuccess != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnMediaEngineLoadSuccess != null)
-                    {
-                        instance.OnMediaEngineLoadSuccess();
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnMediaEngineLoadSuccess != null)
+                        { 
+                            instance.OnMediaEngineLoadSuccess();
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnAudioMixingStateChangedHandler))]
         private static void OnAudioMixingStateChangedCallback(int audioMixingStateType, int audioMixingErrorType)
         {
-            if (instance != null && instance.OnAudioMixingStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnAudioMixingStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnAudioMixingStateChanged != null)
-                    {
-                        instance.OnAudioMixingStateChanged((AUDIO_MIXING_STATE_TYPE)audioMixingStateType, (AUDIO_MIXING_ERROR_TYPE)audioMixingErrorType);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnAudioMixingStateChanged != null)
+                        { 
+                            instance.OnAudioMixingStateChanged((AUDIO_MIXING_STATE_TYPE)audioMixingStateType, (AUDIO_MIXING_ERROR_TYPE)audioMixingErrorType);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnFirstRemoteAudioDecodedHandler))]
         private static void OnFirstRemoteAudioDecodedCallback(uint uid, int elapsed)
         {
-            if (instance != null && instance.OnFirstRemoteAudioDecoded != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnFirstRemoteAudioDecoded != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnFirstRemoteAudioDecoded != null)
-                    {
-                        instance.OnFirstRemoteAudioDecoded(uid, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFirstRemoteAudioDecoded != null)
+                        { 
+                            instance.OnFirstRemoteAudioDecoded(uid, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnLocalVideoStateChanged))]
         private static void OnLocalVideoStateChangedCallback(int localVideoState, int error)
         {
-            if (instance != null && instance.OnLocalVideoStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalVideoStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalVideoStateChanged != null)
-                    {
-                        instance.OnLocalVideoStateChanged((LOCAL_VIDEO_STREAM_STATE)localVideoState, (LOCAL_VIDEO_STREAM_ERROR)error);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalVideoStateChanged != null)
+                        { 
+                            instance.OnLocalVideoStateChanged((LOCAL_VIDEO_STREAM_STATE)localVideoState, (LOCAL_VIDEO_STREAM_ERROR)error);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnRtmpStreamingStateChangedHandler))]
         private static void OnRtmpStreamingStateChangedCallback(string url, int state, int errCode)
         {
-            if (instance != null && instance.OnRtmpStreamingStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRtmpStreamingStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRtmpStreamingStateChanged != null)
-                    {
-                        instance.OnRtmpStreamingStateChanged(url, (RTMP_STREAM_PUBLISH_STATE)state, (RTMP_STREAM_PUBLISH_ERROR)errCode);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRtmpStreamingStateChanged != null)
+                        { 
+                            instance.OnRtmpStreamingStateChanged(url, (RTMP_STREAM_PUBLISH_STATE)state, (RTMP_STREAM_PUBLISH_ERROR)errCode);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnNetworkTypeChangedHandler))]
         private static void OnNetworkTypeChangedCallback(int networkType)
         {
-            if (instance != null && instance.OnNetworkTypeChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnNetworkTypeChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnNetworkTypeChanged != null)
-                    {
-                        instance.OnNetworkTypeChanged((NETWORK_TYPE)networkType);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnNetworkTypeChanged != null)
+                        { 
+                            instance.OnNetworkTypeChanged((NETWORK_TYPE)networkType);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnLastmileProbeResultHandler))]
-        private static void OnLastmileProbeResultCallback(int state, uint upLinkPacketLossRate, uint upLinkjitter, uint upLinkAvailableBandwidth, uint downLinkPacketLossRate, uint downLinkJitter, uint downLinkAvailableBandwidth, uint rtt)
+        private static void OnLastmileProbeResultCallback(int state, uint upLinkPacketLossRate, uint upLinkjitter, uint upLinkAvailableBandwidth, uint downLinkPacketLossRate, uint downLinkJitter, uint downLinkAvailableBandwidth,uint rtt)
         {
-            if (instance != null && instance.OnLastmileProbeResult != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLastmileProbeResult != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLastmileProbeResult != null)
-                    {
-                        LastmileProbeResult lastmileProbeResult = new LastmileProbeResult();
-                        lastmileProbeResult.state = (LASTMILE_PROBE_RESULT_STATE)state;
-                        lastmileProbeResult.uplinkReport.packetLossRate = upLinkPacketLossRate;
-                        lastmileProbeResult.uplinkReport.jitter = upLinkjitter;
-                        lastmileProbeResult.uplinkReport.availableBandwidth = upLinkAvailableBandwidth;
-                        lastmileProbeResult.downlinkReport.packetLossRate = downLinkPacketLossRate;
-                        lastmileProbeResult.downlinkReport.jitter = downLinkJitter;
-                        lastmileProbeResult.downlinkReport.availableBandwidth = downLinkAvailableBandwidth;
-                        lastmileProbeResult.rtt = rtt;
-                        instance.OnLastmileProbeResult(lastmileProbeResult);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLastmileProbeResult != null)
+                        {
+                            LastmileProbeResult lastmileProbeResult = new LastmileProbeResult();
+                            lastmileProbeResult.state = (LASTMILE_PROBE_RESULT_STATE)state;
+                            lastmileProbeResult.uplinkReport.packetLossRate = upLinkPacketLossRate;
+                            lastmileProbeResult.uplinkReport.jitter = upLinkjitter;
+                            lastmileProbeResult.uplinkReport.availableBandwidth = upLinkAvailableBandwidth;
+                            lastmileProbeResult.downlinkReport.packetLossRate = downLinkPacketLossRate;
+                            lastmileProbeResult.downlinkReport.jitter = downLinkJitter;
+                            lastmileProbeResult.downlinkReport.availableBandwidth = downLinkAvailableBandwidth;
+                            lastmileProbeResult.rtt = rtt;
+                            instance.OnLastmileProbeResult(lastmileProbeResult);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnUserInfoUpdatedHandler))]
         private static void OnUserInfoUpdatedCallback(uint uid, uint userUid, string userAccount)
         {
-            if (instance != null && instance.OnUserInfoUpdated != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnUserInfoUpdated != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnUserInfoUpdated != null)
-                    {
-                        UserInfo userInfo = new UserInfo();
-                        userInfo.uid = userUid;
-                        userInfo.userAccount = userAccount;
-                        instance.OnUserInfoUpdated(uid, userInfo);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnUserInfoUpdated != null)
+                        {
+                            UserInfo userInfo = new UserInfo();
+                            userInfo.uid = userUid;
+                            userInfo.userAccount = userAccount;
+                            instance.OnUserInfoUpdated(uid, userInfo);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(OnLocalUserRegisteredHandler))]
         private static void OnLocalUserRegisteredCallback(uint uid, string userAccount)
         {
-            if (instance != null && instance.OnLocalUserRegistered != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalUserRegistered != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalUserRegistered != null)
-                    {
-                        instance.OnLocalUserRegistered(uid, userAccount);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalUserRegistered != null)
+                        {
+                            instance.OnLocalUserRegistered(uid, userAccount);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnLocalAudioStateChangedHandler))]
         private static void OnLocalAudioStateChangedCallback(int state, int error)
         {
-            if (instance != null && instance.OnLocalAudioStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalAudioStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalAudioStateChanged != null)
-                    {
-                        instance.OnLocalAudioStateChanged((LOCAL_AUDIO_STREAM_STATE)state, (LOCAL_AUDIO_STREAM_ERROR)error);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalAudioStateChanged != null)
+                        {
+                            instance.OnLocalAudioStateChanged((LOCAL_AUDIO_STREAM_STATE)state, (LOCAL_AUDIO_STREAM_ERROR)error);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnRemoteAudioStateChangedHandler))]
         private static void OnRemoteAudioStateChangedCallback(uint uid, int state, int reason, int elapsed)
         {
-            if (instance != null && instance.OnRemoteAudioStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnRemoteAudioStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnRemoteAudioStateChanged != null)
-                    {
-                        instance.OnRemoteAudioStateChanged(uid, (REMOTE_AUDIO_STATE)state, (REMOTE_AUDIO_STATE_REASON)reason, elapsed);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnRemoteAudioStateChanged != null)
+                        {
+                            instance.OnRemoteAudioStateChanged(uid, (REMOTE_AUDIO_STATE)state, (REMOTE_AUDIO_STATE_REASON)reason, elapsed);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnLocalAudioStatsHandler))]
         private static void OnLocalAudioStatsCallback(int numChannels, int sentSampleRate, int sentBitrate)
         {
-            if (instance != null && instance.OnLocalAudioStats != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnLocalAudioStats != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnLocalAudioStats != null)
-                    {
-                        LocalAudioStats localAudioStats = new LocalAudioStats();
-                        localAudioStats.numChannels = numChannels;
-                        localAudioStats.sentSampleRate = sentSampleRate;
-                        localAudioStats.sentBitrate = sentBitrate;
-                        instance.OnLocalAudioStats(localAudioStats);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnLocalAudioStats != null)
+                        {
+                            LocalAudioStats localAudioStats = new LocalAudioStats();
+                            localAudioStats.numChannels = numChannels;
+                            localAudioStats.sentSampleRate = sentSampleRate;
+                            localAudioStats.sentBitrate = sentBitrate;
+                            instance.OnLocalAudioStats(localAudioStats);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnChannelMediaRelayStateChangedHandler))]
         private static void OnChannelMediaRelayStateChangedCallback(int state, int code)
         {
-            if (instance != null && instance.OnChannelMediaRelayStateChanged != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnChannelMediaRelayStateChanged != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnChannelMediaRelayStateChanged != null)
-                    {
-                        instance.OnChannelMediaRelayStateChanged((CHANNEL_MEDIA_RELAY_STATE)state, (CHANNEL_MEDIA_RELAY_ERROR)code);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnChannelMediaRelayStateChanged != null)
+                        {
+                            instance.OnChannelMediaRelayStateChanged((CHANNEL_MEDIA_RELAY_STATE)state, (CHANNEL_MEDIA_RELAY_ERROR)code);
+                        }
+                    });
+                }
             }
         }
 
         [MonoPInvokeCallback(typeof(EngineEventOnChannelMediaRelayEventHandler))]
         private static void OnChannelMediaRelayEventCallback(int events)
         {
-            if (instance != null && instance.OnChannelMediaRelayEvent != null && AgoraCallbackQueue.Current != null)
+            if (instance != null && instance.OnChannelMediaRelayEvent != null && instance._AgoraCallbackObject != null)
             {
-                AgoraCallbackQueue.Current.EnQueue(() =>
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
                 {
-                    if (instance != null && instance.OnChannelMediaRelayEvent != null)
-                    {
-                        instance.OnChannelMediaRelayEvent((CHANNEL_MEDIA_RELAY_EVENT)events);
-                    }
-                });
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnChannelMediaRelayEvent != null)
+                        {
+                            instance.OnChannelMediaRelayEvent((CHANNEL_MEDIA_RELAY_EVENT)events);
+                        }
+                    });
+                }
+            }
+        }
+
+        [MonoPInvokeCallback(typeof(EngineEventOnFacePositionChanged))]
+        private static void OnFacePositionChangedCallback(int imageWidth, int imageHeight, int x, int y, int width, int height, int vecDistance, int numFaces)
+        {
+            if (instance != null && instance.OnFacePositionChanged != null && instance._AgoraCallbackObject != null)
+            {
+                AgoraCallbackQueue queue = instance._AgoraCallbackObject._CallbackQueue;
+                if (!ReferenceEquals(queue, null))
+                {
+                    queue.EnQueue(()=> {
+                        if (instance != null && instance.OnFacePositionChanged != null)
+                        {
+                            Rectangle vecRectangle = new Rectangle();
+                            vecRectangle.x = x;
+                            vecRectangle.y = y;
+                            vecRectangle.width = width;
+                            vecRectangle.height = height;
+                            instance.OnFacePositionChanged(imageWidth, imageHeight, vecRectangle, vecDistance, numFaces);
+                        }
+                    });
+                }
             }
         }
 
         private void InitEngineCallback()
-        {
-            IRtcEngineNative.initEventOnEngineCallback(OnJoinChannelSuccessCallback,
-                                      OnReJoinChannelSuccessCallback,
-                                      OnConnectionLostCallback,
-                                      OnLeaveChannelCallback,
-                                      OnConnectionInterruptedCallback,
+        {   
+            IRtcEngineNative.initEventOnEngineCallback(OnJoinChannelSuccessCallback, 
+                                      OnReJoinChannelSuccessCallback, 
+                                      OnConnectionLostCallback, 
+                                      OnLeaveChannelCallback, 
+                                      OnConnectionInterruptedCallback, 
                                       OnRequestTokenCallback,
                                       OnUserJoinedCallback,
                                       OnUserOfflineCallback,
@@ -4062,68 +4696,8 @@ namespace agora_gaming_rtc
                                       OnRemoteAudioStateChangedCallback,
                                       OnLocalAudioStatsCallback,
                                       OnChannelMediaRelayStateChangedCallback,
-                                      OnChannelMediaRelayEventCallback);
-        }
-
-        private class AgoraCallbackQueue : MonoBehaviour
-        {
-            private static Queue<Action> queue = new Queue<Action>();
-            private static AgoraCallbackQueue _current;
-            public static AgoraCallbackQueue Current
-            {
-                get
-                {
-                    return _current;
-                }
-            }
-
-            public void ClearQueue()
-            {
-                lock (queue)
-                {
-                    queue.Clear();
-                }
-            }
-
-            public void EnQueue(Action action)
-            {
-                lock (queue)
-                {
-                    if (queue.Count >= 250)
-                    {
-                        queue.Dequeue();
-                    }
-                    queue.Enqueue(action);
-                }
-            }
-
-            private Action DeQueue()
-            {
-                lock (queue)
-                {
-                    Action action = queue.Dequeue();
-                    return action;
-                }
-            }
-
-            void Awake()
-            {
-                _current = this;
-            }
-            // Update is called once per frame
-            void Update()
-            {
-                if (queue.Count > 0)
-                {
-                    var action = DeQueue();
-                    action();
-                }
-            }
-
-            void OnDestroy()
-            {
-                _current = null;
-            }
+                                      OnChannelMediaRelayEventCallback,
+                                      OnFacePositionChangedCallback);
         }
     }
 };
