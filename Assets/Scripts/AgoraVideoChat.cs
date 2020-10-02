@@ -74,11 +74,25 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         mRtcEngine.EnableVideo();
         mRtcEngine.EnableVideoObserver();
 
+        mRtcEngine.EnableSoundPositionIndication(true);
+
         // By setting our UID to "0" the Agora Engine creates a new one and assigns it. 
         mRtcEngine.JoinChannel(channel, null, 0);
     }
 
     public string GetCurrentChannel() => channel;
+
+    public IRtcEngine GetRtcEngine()
+    {
+        if (mRtcEngine != null)
+        {
+            return mRtcEngine;
+        }
+
+        return null;
+    }
+
+    public uint GetCurrentUID() => myUID;
 
     public void JoinRemoteChannel(string remoteChannelName)
     {
