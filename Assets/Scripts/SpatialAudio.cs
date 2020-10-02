@@ -9,7 +9,7 @@ public enum PanControl
     RIGHT = 1
 };
 
-public class SpatialAudio : MonoBehaviour
+public class SpatialAudio : Photon.MonoBehaviour
 {
 
     private IRtcEngine agoraEngine;
@@ -30,9 +30,12 @@ public class SpatialAudio : MonoBehaviour
 
     void GetAgoraStats()
     {
-        agoraEngine = agoraScript.GetRtcEngine();
-        UID = agoraScript.GetCurrentUID();
-        agoraAudioEffects = agoraEngine.GetAudioEffectManager();
+        if(photonView.isMine)
+        {
+            agoraEngine = agoraScript.GetRtcEngine();
+            UID = agoraScript.GetCurrentUID();
+            agoraAudioEffects = agoraEngine.GetAudioEffectManager();
+        }
     }
 
     // Update is called once per frame
@@ -107,6 +110,9 @@ public class SpatialAudio : MonoBehaviour
 
     public void UpdateAgoraAudioPan(int panDirection)
     {
+        if (!photonView.isMine)
+            return;
+
         currentPanDirection = Mathf.Clamp(currentPanDirection + panDirection, -1, 1);
 
         Debug.LogWarning("current pan direction: " + currentPanDirection);
@@ -123,6 +129,9 @@ public class SpatialAudio : MonoBehaviour
 
     void UpdateAgoraAudioGain(int changeInGain)
     {
+        if (!photonView.isMine)
+            return;
+
         currentGainAmount = Mathf.Clamp(currentGainAmount + changeInGain, 0, 100);
         Debug.LogWarning("current gain amount: " + currentGainAmount);
 
