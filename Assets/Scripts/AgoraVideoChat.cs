@@ -25,7 +25,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private string channel = "unity3d";
     private string originalChannel;
     private IRtcEngine mRtcEngine;
-    private uint myUID = 0;
+    public uint myUID = 0;
 
     [Header("Player Video Panel Properties")]
     [SerializeField]

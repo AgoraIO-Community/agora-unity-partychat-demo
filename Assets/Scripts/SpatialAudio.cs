@@ -14,9 +14,9 @@ public class SpatialAudio : Photon.MonoBehaviour
 
     private IRtcEngine agoraEngine;
     private IAudioEffectManager agoraAudioEffects;
-    private uint UID = 0;
-    private int currentPanDirection = 0;
-    private int currentGainAmount = 100;
+    public uint remoteUID = 0;
+    public int currentPanDirection = 0;
+    public int currentGainAmount = 100;
 
     private AgoraVideoChat agoraScript;
 
@@ -33,7 +33,7 @@ public class SpatialAudio : Photon.MonoBehaviour
         if(photonView.isMine)
         {
             agoraEngine = agoraScript.GetRtcEngine();
-            UID = agoraScript.GetCurrentUID();
+            //remoteUID = agoraScript.GetCurrentUID();
             agoraAudioEffects = agoraEngine.GetAudioEffectManager();
         }
     }
@@ -117,13 +117,13 @@ public class SpatialAudio : Photon.MonoBehaviour
 
         Debug.LogWarning("current pan direction: " + currentPanDirection);
 
-        if (UID == 0)
+        if (remoteUID == 0)
         {
             GetAgoraStats();
             return;
         }
 
-        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(UID, currentPanDirection, currentGainAmount);
+        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
         Debug.LogWarning("set agora pan success: " + audioSuccess);
     }
 
@@ -135,13 +135,13 @@ public class SpatialAudio : Photon.MonoBehaviour
         currentGainAmount = Mathf.Clamp(currentGainAmount + changeInGain, 0, 100);
         Debug.LogWarning("current gain amount: " + currentGainAmount);
 
-        if(UID == 0)
+        if(remoteUID == 0)
         {
             GetAgoraStats();
             return;
         }
 
-        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(UID, currentPanDirection, currentGainAmount);
+        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
         Debug.LogWarning("set agora gain success: " + audioSuccess);
     }
 }
