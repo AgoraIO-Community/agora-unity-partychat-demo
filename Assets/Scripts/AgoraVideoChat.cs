@@ -164,16 +164,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         {
             print(gameObject.name + "photon view is mine");
             CreateUserVideoSurface(uid, false);
-        }
-        else if (photonView.isMine == false)
-        {
-            print(gameObject.name + "photon view is mine");
 
-            if(myUID == uid)
-            {
-                print(gameObject.name + "photon view is mine and my uid is matching local join player");
-            }
-
+            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
         }
     }
 
