@@ -29,7 +29,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private uint myUID = 0;
 
     [SerializeField]
-    private int networkedUID;
+    private uint networkedUID;
 
     [Header("Player Video Panel Properties")]
     [SerializeField]
@@ -330,7 +330,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     [PunRPC]
     public void UpdatePlayerUID(string newUID)
     {
-        networkedUID = int.Parse(newUID);
+        networkedUID = uint.Parse(newUID);
         print("UpdatePlayerUID called for: " + newUID);
     }
 }
