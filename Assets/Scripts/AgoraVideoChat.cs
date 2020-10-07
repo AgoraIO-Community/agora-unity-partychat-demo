@@ -151,9 +151,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         myUID = uid;
 
-        //PhotonView.Find(remotePlayerViewID).RPC("InvitePlayerToPartyChannel", PhotonTargets.All, remotePlayerViewID, agoraVideo.GetCurrentChannel());
 
-        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID);
+        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
 
         CreateUserVideoSurface(uid, true);
     }
@@ -166,7 +165,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             print(gameObject.name + "photon view is mine");
             CreateUserVideoSurface(uid, false);
 
-            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID);
+            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
         }
     }
 
@@ -329,9 +328,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     }
 
     [PunRPC]
-    public void UpdatePlayerUID(int newUID)
+    public void UpdatePlayerUID(string newUID)
     {
-        networkedUID = newUID;
+        networkedUID = int.Parse(newUID);
         print("UpdatePlayerUID called for: " + newUID);
     }
 }
