@@ -25,7 +25,10 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private string channel = "unity3d";
     private string originalChannel;
     private IRtcEngine mRtcEngine;
-    public uint myUID = 0;
+    [SerializeField]
+    private uint myUID = 0;
+
+    public string stringUID;
 
     [Header("Player Video Panel Properties")]
     [SerializeField]
@@ -147,16 +150,31 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         myUID = uid;
 
+        //PhotonView.Find(remotePlayerViewID).RPC("InvitePlayerToPartyChannel", PhotonTargets.All, remotePlayerViewID, agoraVideo.GetCurrentChannel());
+
+        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
+
         CreateUserVideoSurface(uid, true);
     }
 
     // Remote Client Joins Channel.
     private void OnUserJoinedHandler(uint uid, int elapsed)
     {
-        if (!photonView.isMine)
-            return;
+        if (photonView.isMine)
+        {
+            print(gameObject.name + "photon view is mine");
+            CreateUserVideoSurface(uid, false);
+        }
+        else if (photonView.isMine == false)
+        {
+            print(gameObject.name + "photon view is mine");
 
-        CreateUserVideoSurface(uid, false);
+            if(myUID == uid)
+            {
+                print(gameObject.name + "photon view is mine and my uid is matching local join player");
+            }
+
+        }
     }
 
     // Local user leaves channel.
@@ -302,5 +320,25 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnApplicationQuit()
     {
         TerminateAgoraEngine();
+    }
+
+
+
+    [PunRPC]
+    public void InvitePlayerToPartyChannel(int invitedID, string channelName)
+    {
+        // When the invited ID matches the correct player ID, update their canvas and tell them what Agora channel to join.
+        if (photonView.isMine && invitedID == photonView.viewID)
+        {
+            //joinButton.SetActive(true);
+            //remoteInviteChannelName = channelName;
+        }
+    }
+
+    [PunRPC]
+    public void UpdatePlayerUID(string newUID)
+    {
+        stringUID = newUID;
+        print("UpdatePlayerUID called for: " + newUID);
     }
 }

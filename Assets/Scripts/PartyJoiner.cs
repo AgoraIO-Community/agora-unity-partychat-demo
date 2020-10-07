@@ -104,6 +104,8 @@ public class PartyJoiner : Photon.MonoBehaviour
         }
     }
 
+
+
     public void OnJoinButtonPress()
     {
         if (photonView.isMine && remoteInviteChannelName != null)

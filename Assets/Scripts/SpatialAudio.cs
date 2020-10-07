@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using UnityEngine;
 using agora_gaming_rtc;
 
-public enum PanControl
-{
-    LEFT = -1,
-    RIGHT = 1
-};
+
+// What I need to do:
+/*
+ * Store the UID of all the users that join the game, in a list 
+ * When a user crosses into my trigger zone, I get their UID, and call "update remote audio" locally, for THEIR uid.
+ * How do I get their UID? How do I know who just crossed my trigger zone?
+ *  Dictionary: Player name associated with UID
+
+*/
+
+
 
 public class SpatialAudio : Photon.MonoBehaviour
 {
