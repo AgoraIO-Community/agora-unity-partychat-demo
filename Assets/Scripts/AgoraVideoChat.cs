@@ -28,7 +28,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     [SerializeField]
     private uint myUID = 0;
 
-    public string stringUID;
+    [SerializeField]
+    private int networkedUID;
 
     [Header("Player Video Panel Properties")]
     [SerializeField]
@@ -152,7 +153,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         //PhotonView.Find(remotePlayerViewID).RPC("InvitePlayerToPartyChannel", PhotonTargets.All, remotePlayerViewID, agoraVideo.GetCurrentChannel());
 
-        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
+        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID);
 
         CreateUserVideoSurface(uid, true);
     }
@@ -165,7 +166,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             print(gameObject.name + "photon view is mine");
             CreateUserVideoSurface(uid, false);
 
-            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
+            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID);
         }
     }
 
@@ -328,9 +329,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     }
 
     [PunRPC]
-    public void UpdatePlayerUID(string newUID)
+    public void UpdatePlayerUID(int newUID)
     {
-        stringUID = newUID;
+        networkedUID = newUID;
         print("UpdatePlayerUID called for: " + newUID);
     }
 }
