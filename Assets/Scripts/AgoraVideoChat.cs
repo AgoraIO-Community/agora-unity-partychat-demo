@@ -98,6 +98,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
     public uint GetCurrentUID() => myUID;
 
+    public uint GetNetworkedUID() => networkedUID;
+
     public void JoinRemoteChannel(string remoteChannelName)
     {
         if (!photonView.isMine)
@@ -124,7 +126,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             return;
         }
 
-
         /* NOTE:
          * Say I'm in my original channel - "myChannel" - and someone joins me.
          * If I want to leave the party, and go back to my original channel, someone is already in it!
@@ -147,10 +148,11 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnJoinChannelSuccessHandler(string channelName, uint uid, int elapsed)
     {
         if (!photonView.isMine)
+        {
             return;
+        }
 
         myUID = uid;
-
 
         this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
 
@@ -160,13 +162,14 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     // Remote Client Joins Channel.
     private void OnUserJoinedHandler(uint uid, int elapsed)
     {
-        if (photonView.isMine)
+        if (!photonView.isMine)
         {
-            print(gameObject.name + "photon view is mine");
-            CreateUserVideoSurface(uid, false);
-
-            this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
+            return;
         }
+
+        CreateUserVideoSurface(uid, false);
+
+        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
     }
 
     // Local user leaves channel.
@@ -331,6 +334,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     public void UpdatePlayerUID(string newUID)
     {
         networkedUID = uint.Parse(newUID);
-        print("UpdatePlayerUID called for: " + newUID);
+        //print("UpdatePlayerUID called for: " + newUID);
     }
 }

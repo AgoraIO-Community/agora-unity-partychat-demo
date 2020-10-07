@@ -6,10 +6,20 @@ using agora_gaming_rtc;
 
 // What I need to do:
 /*
- * Store the UID of all the users that join the game, in a list 
- * When a user crosses into my trigger zone, I get their UID, and call "update remote audio" locally, for THEIR uid.
- * How do I get their UID? How do I know who just crossed my trigger zone?
- *  Dictionary: Player name associated with UID
+ * when a player crosses the trigger zone
+    
+    6 = minimum volume
+    1.5 = maximum volume
+
+
+
+
+
+    * get the position and orientation values for a player
+    * get that players UID
+    * Use two lists Player | UID
+    * Calucualte Data on Player[0] | setRemoteVoicePosition(uidList[0], pan, gain);
+
 
 */
 
@@ -17,7 +27,6 @@ using agora_gaming_rtc;
 
 public class SpatialAudio : Photon.MonoBehaviour
 {
-
     private IRtcEngine agoraEngine;
     private IAudioEffectManager agoraAudioEffects;
     public uint remoteUID = 0;
@@ -26,36 +35,36 @@ public class SpatialAudio : Photon.MonoBehaviour
 
     private AgoraVideoChat agoraScript;
 
+    public List<Transform> players;
+    public List<uint> playerUIDs;
+
+
     // Start is called before the first frame update
     void Start()
     {
         agoraScript = GetComponent<AgoraVideoChat>();
 
-        GetAgoraStats();
-    }
-
-    void GetAgoraStats()
-    {
-        if(photonView.isMine)
+        if (photonView.isMine)
         {
             agoraEngine = agoraScript.GetRtcEngine();
-            //remoteUID = agoraScript.GetCurrentUID();
             agoraAudioEffects = agoraEngine.GetAudioEffectManager();
         }
+
+        players = new List<Transform>();
+        playerUIDs = new List<uint>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(Input.GetKeyDown(KeyCode.LeftArrow))
         {
             // pan left
-            UpdateAgoraAudioPan(-1);
+            //UpdateAgoraAudioPan(-1);
         }
         else if(Input.GetKeyDown(KeyCode.RightArrow))
         {
             // pan right
-            UpdateAgoraAudioPan(1);
+            //UpdateAgoraAudioPan(1);
         }
         else if(Input.GetKeyDown(KeyCode.UpArrow))
         {
@@ -77,10 +86,71 @@ public class SpatialAudio : Photon.MonoBehaviour
         Gizmos.DrawRay(transform.position, transform.forward);
     }
 
-    private void OnTriggerStay(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
+        if(!photonView.isMine)
+        {
+            return;
+        }
+
         if(other.CompareTag("Player"))
         {
+            // check if collided player UID is already in the list
+            foreach (Transform player in players)
+            {
+                if (other.transform == player)
+                {
+                    return;
+                }
+            }
+
+            // if player doesn't match add player transform to list
+            players.Add(other.transform);
+            playerUIDs.Add(other.GetComponent<AgoraVideoChat>().GetNetworkedUID());
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if(!photonView.isMine)
+        {
+            return;
+        }
+
+        if(other.CompareTag("Player"))
+        {
+            int index = 0;
+            for (int i = 0; i < players.Count - 1; i++)
+            {
+                if (other.transform == other)
+                {
+                    index = i;
+                    break;
+                }
+            }
+
+            players.RemoveAt(index);
+            playerUIDs.RemoveAt(index);
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+
+
+
+        if(photonView.isMine && other.CompareTag("Player"))
+        {
+            // for (int i = 0; i < playerList; i++)
+            // {
+            /*      float gain = Distance to player
+             *      float pan = orientation to player
+             *      setRemoteVoicePosition(uidList[i], gain, pan);
+             * }
+             * 
+             */
+
+
             Debug.DrawRay(transform.position, other.transform.position - transform.position, Color.yellow);
         }
     }
@@ -114,24 +184,29 @@ public class SpatialAudio : Photon.MonoBehaviour
     //    return new Vector2(pan, gain);
     //}
 
-    public void UpdateAgoraAudioPan(int panDirection)
+    //public void UpdateAgoraAudioPan(int panDirection)
+    //{
+    //    if (!photonView.isMine)
+    //        return;
+
+    //    currentPanDirection = Mathf.Clamp(currentPanDirection + panDirection, -1, 1);
+
+    //    Debug.LogWarning("current pan direction: " + currentPanDirection);
+
+
+
+    //    int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
+    //    Debug.LogWarning("set agora pan success: " + audioSuccess);
+    //}
+
+    void CalculateGainAmount(float distanceToPlayer)
     {
-        if (!photonView.isMine)
-            return;
+        // Lerp gain value between
+        // Distance 6 = Gain 0
+        // Distance 1.5 = Gain 100
 
-        currentPanDirection = Mathf.Clamp(currentPanDirection + panDirection, -1, 1);
-
-        Debug.LogWarning("current pan direction: " + currentPanDirection);
-
-        if (remoteUID == 0)
-        {
-            GetAgoraStats();
-            return;
-        }
-
-        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
-        Debug.LogWarning("set agora pan success: " + audioSuccess);
     }
+
 
     void UpdateAgoraAudioGain(int changeInGain)
     {
@@ -140,12 +215,6 @@ public class SpatialAudio : Photon.MonoBehaviour
 
         currentGainAmount = Mathf.Clamp(currentGainAmount + changeInGain, 0, 100);
         Debug.LogWarning("current gain amount: " + currentGainAmount);
-
-        if(remoteUID == 0)
-        {
-            GetAgoraStats();
-            return;
-        }
 
         int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
         Debug.LogWarning("set agora gain success: " + audioSuccess);
