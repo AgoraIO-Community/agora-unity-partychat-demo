@@ -7,21 +7,24 @@ using agora_gaming_rtc;
 
 public class SpatialAudio : Photon.MonoBehaviour
 {
+    [Header("Agora Attributes")]
     private IRtcEngine agoraEngine;
     private IAudioEffectManager agoraAudioEffects;
-    public uint remoteUID = 0;
-    public int currentPanDirection = 0;
-    public int currentGainAmount = 100;
-
+    private SphereCollider agoraChatRadius;
     private AgoraVideoChat agoraScript;
 
-    public List<Transform> players;
-    public List<uint> playerUIDs;
-    bool searchingNetworkForIDs = false;
+    private List<Transform> players;
+    private List<uint> playerUIDs;
+    private bool searchingNetworkForIDs = false;
+
+    private const float MAX_CHAT_PROXIMITY = 1.5f;
+    private const float PAN_MIN = -1f;
+    private const float PAN_MAX = 1f;
 
     void Start()
     {
         agoraScript = GetComponent<AgoraVideoChat>();
+        agoraChatRadius = GetComponent<SphereCollider>();
 
         if (photonView.isMine)
         {
@@ -32,38 +35,6 @@ public class SpatialAudio : Photon.MonoBehaviour
         players = new List<Transform>();
         playerUIDs = new List<uint>();
     }
-
-    void Update()
-    {
-        if(Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            // pan left
-            //UpdateAgoraAudioPan(-1);
-        }
-        else if(Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            // pan right
-            //UpdateAgoraAudioPan(1);
-        }
-        else if(Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            UpdateAgoraAudioGain(20);
-        }
-        else if(Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            UpdateAgoraAudioGain(-20);
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawRay(transform.position, -transform.forward);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(transform.position, transform.forward);
-    }
-
 
     IEnumerator AddNetworkedPlayerToSpatialAudioList(Collider otherPlayer)
     {
@@ -129,6 +100,7 @@ public class SpatialAudio : Photon.MonoBehaviour
             {
                 if (other.transform == players[i])
                 {
+                    agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], 0, 0);
                     players.RemoveAt(i);
                     playerUIDs.RemoveAt(i);
                     break;
@@ -145,68 +117,57 @@ public class SpatialAudio : Photon.MonoBehaviour
             {
                 float distanceToPlayer = Vector3.Distance(transform.position, players[i].position);
                 float gain = GetGainByPlayerDistance(distanceToPlayer);
-                float pan = GetPanByPlayerOrientation();
+
+                float pan = GetPanByPlayerOrientation(players[i]);
 
                 agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], pan, gain);
-            }
-
-            Debug.DrawRay(transform.position, other.transform.position - transform.position, Color.yellow);
+            }            
         }
     }
 
-    ////point
-    //Vector2 PanAndGain(Vector2 point)
-    //{
-    //    Vector2 midBottom = new Vector2(x: (availablePeerRect.xMax + availablePeerRect.xMin) / 2, y: availablePeerRect.yMin);
-    //    Vector2 direction = point - midBottom;
-
-    //    float pan = 0;
-    //    if (direction == Vector2.zero)
-    //    {
-    //        pan = 0;
-    //    }
-    //    else if (direction.y == 0)
-    //    {
-    //        pan = direction.x > 0 ? 1 : -1;
-    //    }
-    //    else
-    //    {
-    //        pan = Mathf.Atan(direction.x / direction.y) / Mathf.PI * 2;
-    //    }
-
     float GetGainByPlayerDistance(float distanceToPlayer)
     {
-        distanceToPlayer = Mathf.Clamp(distanceToPlayer, 1.5f, 3f);
-        float gain = 100f + ((-100f * distanceToPlayer) + 150f) / 1.5f;
+        // Agora -- Gain Attributes -- Unity Distance
+        //  100        Max Gain        MAX_CHAT_PROXIMITY [1.5f] (as close as the player can get to another remote player)
+        //   0         Min Gain        agoraChatRadius [6f] (anything past this distance will be muted)
+        // if player is too far, gain is 0 (min volume)
 
+        // Clamp incoming distance to Min and Max values
+        distanceToPlayer = Mathf.Clamp(distanceToPlayer, MAX_CHAT_PROXIMITY, agoraChatRadius.radius);
+
+        // Normalize the result between a value of 0f - 100f;
+        float gain = (distanceToPlayer - agoraChatRadius.radius) / (MAX_CHAT_PROXIMITY - agoraChatRadius.radius);
+        gain *= 100;
+        
         return gain;
     }
 
-    float GetPanByPlayerOrientation()
+    float GetPanByPlayerOrientation(Transform otherPlayer)
     {
-        float pan = 0;
+        // Agora -- Pan Attributes -- Dot Product
+        //  -1          Left            0.0f
+        //   0          Center          0.5f
+        //   1          Right           1.0f
 
-        // if other player is in front of me
-            // on left = left ear
-            // on right = right ear
+        // Summary:
+        // I need to know to what amount the remote player is to the left or right of me, to determine how much of their voice to send to each ear.
+        // To find this info, the dot product is utilized.
 
-        // if other player is behind me
-            // on left = right ear
-            // on righ = left ear
+        // Step 1: Get the dot product between the vector pointing from local towards the remote player,
+        // and right-facing vector of local player
+        Vector3 directionToRemotePlayer = otherPlayer.position - transform.position;
+
+        // (The length of the vector isn't important for this calculation, so the vector is normalized).
+        directionToRemotePlayer.Normalize();
+
+        // A value between -1 and 1 is produced, indicating the orientation of local player to the remote player.
+        float dot = Vector3.Dot(transform.right, directionToRemotePlayer);
+
+        // The resulting dot product range of (-1, 1) is normalized to (0,1) to utilize Unity's Lerp function. 
+        float normalizedDot = (dot - PAN_MIN) / (PAN_MAX - PAN_MIN);
+
+        float pan = Mathf.Lerp(-1, 1, normalizedDot);
 
         return pan;
-    }
-
-
-    void UpdateAgoraAudioGain(int changeInGain)
-    {
-        if (!photonView.isMine)
-            return;
-
-        currentGainAmount = Mathf.Clamp(currentGainAmount + changeInGain, 0, 100);
-        Debug.LogWarning("current gain amount: " + currentGainAmount);
-
-        int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
-        Debug.LogWarning("set agora gain success: " + audioSuccess);
     }
 }
