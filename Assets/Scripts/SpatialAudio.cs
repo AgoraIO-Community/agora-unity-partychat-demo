@@ -4,26 +4,6 @@ using UnityEngine;
 using agora_gaming_rtc;
 
 
-// What I need to do:
-/*
- * when a player crosses the trigger zone
-    
-    6 = minimum volume
-    1.5 = maximum volume
-
-
-
-
-
-    * get the position and orientation values for a player
-    * get that players UID
-    * Use two lists Player | UID
-    * Calucualte Data on Player[0] | setRemoteVoicePosition(uidList[0], pan, gain);
-
-
-*/
-
-
 
 public class SpatialAudio : Photon.MonoBehaviour
 {
@@ -37,9 +17,8 @@ public class SpatialAudio : Photon.MonoBehaviour
 
     public List<Transform> players;
     public List<uint> playerUIDs;
+    bool searchingNetworkForIDs = false;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         agoraScript = GetComponent<AgoraVideoChat>();
@@ -76,7 +55,6 @@ public class SpatialAudio : Photon.MonoBehaviour
         }
     }
 
-
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.blue;
@@ -86,70 +64,91 @@ public class SpatialAudio : Photon.MonoBehaviour
         Gizmos.DrawRay(transform.position, transform.forward);
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if(!photonView.isMine)
-        {
-            return;
-        }
 
-        if(other.CompareTag("Player"))
+    IEnumerator AddNetworkedPlayerToSpatialAudioList(Collider otherPlayer)
+    {
+        if (searchingNetworkForIDs == true)
+            yield break;
+
+        if(photonView.isMine)
         {
-            // check if collided player UID is already in the list
-            foreach (Transform player in players)
+            searchingNetworkForIDs = true;
+
+            // When players spawn in, they can spawn on top of each other within 1-2 frames.
+            // The photon network needs a little longer to populate the proper IDs which can mess up functionality
+            // This timer is to give the Photon network 2 seconds to populate the proper IDs or the trigger overlap is nullified
+            uint triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+            float networkTimer = 2f;
+            float networkWaitTime = 0f;
+
+            while (triggerPlayerID == 0)
             {
-                if (other.transform == player)
+                triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+                networkWaitTime += Time.deltaTime;
+                if (networkWaitTime >= networkTimer)
                 {
-                    return;
+                    Debug.LogError("Photon network time out for finding player network ID on player: " + otherPlayer.gameObject.name);
+                    yield break;
                 }
+                yield return null;
             }
 
-            // if player doesn't match add player transform to list
-            players.Add(other.transform);
-            playerUIDs.Add(other.GetComponent<AgoraVideoChat>().GetNetworkedUID());
+            // Now that we have made sure our network IDs are loaded, we can add players to the list
+            bool isDuplicatePlayer = false;
+            foreach (Transform player in players)
+            {
+                if (otherPlayer.transform == player)
+                {
+                    isDuplicatePlayer = true;
+                    break;
+                }
+            }
+            if (isDuplicatePlayer == false)
+            {
+                players.Add(otherPlayer.transform);
+                playerUIDs.Add(triggerPlayerID);
+            }
+
+            searchingNetworkForIDs = false;
+        }   
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(photonView.isMine && other.CompareTag("Player"))
+        {
+            StartCoroutine(AddNetworkedPlayerToSpatialAudioList(other));
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if(!photonView.isMine)
+        if(photonView.isMine && other.CompareTag("Player"))
         {
-            return;
-        }
-
-        if(other.CompareTag("Player"))
-        {
-            int index = 0;
-            for (int i = 0; i < players.Count - 1; i++)
+            for (int i = 0; i < players.Count; i++)
             {
-                if (other.transform == other)
+                if (other.transform == players[i])
                 {
-                    index = i;
+                    players.RemoveAt(i);
+                    playerUIDs.RemoveAt(i);
                     break;
                 }
             }
-
-            players.RemoveAt(index);
-            playerUIDs.RemoveAt(index);
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-
-
-
-        if(photonView.isMine && other.CompareTag("Player"))
+        if (photonView.isMine && other.CompareTag("Player"))
         {
-            // for (int i = 0; i < playerList; i++)
-            // {
-            /*      float gain = Distance to player
-             *      float pan = orientation to player
-             *      setRemoteVoicePosition(uidList[i], gain, pan);
-             * }
-             * 
-             */
+            for (int i = 0; i < players.Count; i++)
+            {
+                float distanceToPlayer = Vector3.Distance(transform.position, players[i].position);
+                float gain = GetGainByPlayerDistance(distanceToPlayer);
+                float pan = GetPanByPlayerOrientation();
 
+                agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], pan, gain);
+            }
 
             Debug.DrawRay(transform.position, other.transform.position - transform.position, Color.yellow);
         }
@@ -175,36 +174,27 @@ public class SpatialAudio : Photon.MonoBehaviour
     //        pan = Mathf.Atan(direction.x / direction.y) / Mathf.PI * 2;
     //    }
 
-    //    float gain = 100f - 50f * direction.magnitude / availablePeerRect.height;
-    //    if (gain < 20)
-    //    {
-    //        gain = 20f;
-    //    }
-
-    //    return new Vector2(pan, gain);
-    //}
-
-    //public void UpdateAgoraAudioPan(int panDirection)
-    //{
-    //    if (!photonView.isMine)
-    //        return;
-
-    //    currentPanDirection = Mathf.Clamp(currentPanDirection + panDirection, -1, 1);
-
-    //    Debug.LogWarning("current pan direction: " + currentPanDirection);
-
-
-
-    //    int audioSuccess = agoraAudioEffects.SetRemoteVoicePosition(remoteUID, currentPanDirection, currentGainAmount);
-    //    Debug.LogWarning("set agora pan success: " + audioSuccess);
-    //}
-
-    void CalculateGainAmount(float distanceToPlayer)
+    float GetGainByPlayerDistance(float distanceToPlayer)
     {
-        // Lerp gain value between
-        // Distance 6 = Gain 0
-        // Distance 1.5 = Gain 100
+        distanceToPlayer = Mathf.Clamp(distanceToPlayer, 1.5f, 3f);
+        float gain = 100f + ((-100f * distanceToPlayer) + 150f) / 1.5f;
 
+        return gain;
+    }
+
+    float GetPanByPlayerOrientation()
+    {
+        float pan = 0;
+
+        // if other player is in front of me
+            // on left = left ear
+            // on right = right ear
+
+        // if other player is behind me
+            // on left = right ear
+            // on righ = left ear
+
+        return pan;
     }
 
 
