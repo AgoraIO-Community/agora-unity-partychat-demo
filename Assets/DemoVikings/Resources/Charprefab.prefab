@@ -193,8 +193,8 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 11400010}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 2
+  instantiationId: 2
   currentMasterID: -1
   isRuntimeInstantiated: 0
 --- !u!114 &11400010
@@ -223,6 +223,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   appID: 57481146914f4cddaa220d6f7a045063
   channel: unity3d
+  myUID: 0
+  networkedUID: 0
   userVideoPrefab: {fileID: 1272405541118282648, guid: 9c09429efb77d4336ab9650b8f03362e,
     type: 3}
   spawnPoint: {fileID: 8601549185160302039}
@@ -256,7 +258,7 @@ SphereCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 3
+  m_Radius: 6
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1058618545547744640
 MonoBehaviour:
@@ -1513,8 +1515,8 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 0}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 3
+  instantiationId: 3
   currentMasterID: -1
   isRuntimeInstantiated: 0
 --- !u!1 &4024445271744060198
@@ -2388,7 +2390,7 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 0}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 4
+  instantiationId: 4
   currentMasterID: -1
   isRuntimeInstantiated: 0
