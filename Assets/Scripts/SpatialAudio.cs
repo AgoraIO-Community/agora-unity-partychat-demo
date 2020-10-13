@@ -3,6 +3,15 @@ using System.Collections.Generic;
 using UnityEngine;
 using agora_gaming_rtc;
 
+// when a user joins in, I need to automatically add them to my player list
+// when a user joins in, search Scene for gameobjects by "Player" tag
+// Check for networked UID, if not found, add UID and player to the lists
+
+// First player is spawned via photon
+// Then agora stuff kicks in
+// photon network ID is discovered .25 seconds after spawn. 
+// when a new user joins in, all users scan the entire field for new networked IDs - add users to spatial audio list
+
 
 
 public class SpatialAudio : Photon.MonoBehaviour
@@ -12,8 +21,9 @@ public class SpatialAudio : Photon.MonoBehaviour
     private IAudioEffectManager agoraAudioEffects;
     private SphereCollider agoraChatRadius;
     private AgoraVideoChat agoraScript;
-
+    [SerializeField]
     private List<Transform> players;
+    [SerializeField]
     private List<uint> playerUIDs;
     private bool searchingNetworkForIDs = false;
 
@@ -34,94 +44,160 @@ public class SpatialAudio : Photon.MonoBehaviour
 
         players = new List<Transform>();
         playerUIDs = new List<uint>();
+
+        StartCoroutine(AddNetworkedPlayersToSpatialAudioList());
     }
 
-    IEnumerator AddNetworkedPlayerToSpatialAudioList(Collider otherPlayer)
+    private void Update()
     {
-        if (searchingNetworkForIDs == true)
-            yield break;
+        UpdateSpatialAudio();
+    }
 
-        if(photonView.isMine)
+    IEnumerator AddNetworkedPlayersToSpatialAudioList()
+    {
+        if(photonView.isMine == false)
         {
-            searchingNetworkForIDs = true;
+            yield break;
+        }
 
-            // When players spawn in, they can spawn on top of each other within 1-2 frames.
-            // The photon network needs a little longer to populate the proper IDs which can mess up functionality
-            // This timer is to give the Photon network 2 seconds to populate the proper IDs or the trigger overlap is nullified
-            uint triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+        GameObject[] otherPlayers = GameObject.FindGameObjectsWithTag("Player");
+
+        foreach(GameObject player in otherPlayers)
+        {
+            if(player == this.gameObject)
+            {
+                continue;
+            }
+
+            uint playerNetworkID = player.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+
             float networkTimer = 2f;
             float networkWaitTime = 0f;
-
-            while (triggerPlayerID == 0)
+            while (playerNetworkID == 0)
             {
-                triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+                playerNetworkID = player.GetComponent<AgoraVideoChat>().GetNetworkedUID();
                 networkWaitTime += Time.deltaTime;
                 if (networkWaitTime >= networkTimer)
                 {
-                    Debug.LogError("Photon network time out for finding player network ID on player: " + otherPlayer.gameObject.name);
-                    yield break;
+                    Debug.LogError("Photon network time out for finding player network ID on player: " + player.name);
+                    break;
                 }
-                yield return null;
+
+                yield return new WaitForSeconds(.05f);
             }
 
-            // Now that we have made sure our network IDs are loaded, we can add players to the list
-            bool isDuplicatePlayer = false;
-            foreach (Transform player in players)
+            bool isPlayerAlreadyInList = false;
+            foreach (uint playerID in playerUIDs)
             {
-                if (otherPlayer.transform == player)
+                if (playerNetworkID == playerID)
                 {
-                    isDuplicatePlayer = true;
+                    isPlayerAlreadyInList = true;
                     break;
                 }
             }
-            if (isDuplicatePlayer == false)
+
+            if(isPlayerAlreadyInList == false)
             {
-                players.Add(otherPlayer.transform);
-                playerUIDs.Add(triggerPlayerID);
-            }
-
-            searchingNetworkForIDs = false;
-        }   
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if(photonView.isMine && other.CompareTag("Player"))
-        {
-            StartCoroutine(AddNetworkedPlayerToSpatialAudioList(other));
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if(photonView.isMine && other.CompareTag("Player"))
-        {
-            for (int i = 0; i < players.Count; i++)
-            {
-                if (other.transform == players[i])
-                {
-                    agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], 0, 0);
-                    players.RemoveAt(i);
-                    playerUIDs.RemoveAt(i);
-                    break;
-                }
+                players.Add(player.transform);
+                playerUIDs.Add(playerNetworkID);
             }
         }
     }
 
-    private void OnTriggerStay(Collider other)
+
+    //IEnumerator AddNetworkedPlayerToSpatialAudioList(Collider otherPlayer)
+    //{
+    //    if (searchingNetworkForIDs == true)
+    //        yield break;
+
+    //    if(photonView.isMine)
+    //    {
+    //        searchingNetworkForIDs = true;
+
+    //        // When players spawn in, they can spawn on top of each other within 1-2 frames.
+    //        // The photon network needs a little longer to populate the proper IDs which can mess up functionality
+    //        // This timer is to give the Photon network 2 seconds to populate the proper IDs or the trigger overlap is nullified
+    //        uint triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+    //        float networkTimer = 2f;
+    //        float networkWaitTime = 0f;
+
+    //        while (triggerPlayerID == 0)
+    //        {
+    //            triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
+    //            networkWaitTime += Time.deltaTime;
+    //            if (networkWaitTime >= networkTimer)
+    //            {
+    //                Debug.LogError("Photon network time out for finding player network ID on player: " + otherPlayer.gameObject.name);
+    //                yield break;
+    //            }
+    //            yield return null;
+    //        }
+
+    //        // Now that we have made sure our network IDs are loaded, we can add players to the list
+    //        bool isDuplicatePlayer = false;
+    //        foreach (Transform player in players)
+    //        {
+    //            if (otherPlayer.transform == player)
+    //            {
+    //                isDuplicatePlayer = true;
+    //                break;
+    //            }
+    //        }
+    //        if (isDuplicatePlayer == false)
+    //        {
+    //            players.Add(otherPlayer.transform);
+    //            playerUIDs.Add(triggerPlayerID);
+    //        }
+
+    //        searchingNetworkForIDs = false;
+    //    }   
+    //}
+
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if(photonView.isMine && other.CompareTag("Player"))
+    //    {
+    //        StartCoroutine(AddNetworkedPlayerToSpatialAudioList(other));
+    //    }
+    //}
+
+    //private void OnTriggerExit(Collider other)
+    //{
+    //    if(photonView.isMine && other.CompareTag("Player"))
+    //    {
+    //        for (int i = 0; i < players.Count; i++)
+    //        {
+    //            if (other.transform == players[i])
+    //            {
+    //                agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], 0, 0);
+    //                players.RemoveAt(i);
+    //                playerUIDs.RemoveAt(i);
+    //                break;
+    //            }
+    //        }
+    //    }
+    //}
+
+    //private void OnTriggerStay(Collider other)
+    //{
+    //    if (other.CompareTag("Player"))
+    //    {
+    //        UpdateSpatialAudio();
+    //    }
+    //}
+
+    void UpdateSpatialAudio()
     {
-        if (photonView.isMine && other.CompareTag("Player"))
+        if (photonView.isMine)
         {
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < players.Count - 1; i++)
             {
                 float distanceToPlayer = Vector3.Distance(transform.position, players[i].position);
                 float gain = GetGainByPlayerDistance(distanceToPlayer);
-
                 float pan = GetPanByPlayerOrientation(players[i]);
 
                 agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], pan, gain);
-            }            
+            }
         }
     }
 
