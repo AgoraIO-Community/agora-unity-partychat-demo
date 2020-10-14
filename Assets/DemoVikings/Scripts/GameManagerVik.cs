@@ -46,6 +46,11 @@ public class GameManagerVik : Photon.MonoBehaviour {
 
         if (GUILayout.Button("Leave Room"))
         {
+            if(photonView.isMine)
+            {
+
+            }
+
             PhotonNetwork.LeaveRoom();
         }
     }

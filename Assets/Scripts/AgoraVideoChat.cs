@@ -27,8 +27,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private IRtcEngine mRtcEngine;
     [SerializeField]
     private uint myUID = 0;
-
-    [SerializeField]
     private uint networkedUID;
 
     [Header("Player Video Panel Properties")]
@@ -304,11 +302,11 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
     private IEnumerator OnLeftRoom()
     {
+        TerminateAgoraEngine();
+
         //Wait untill Photon is properly disconnected (empty room, and connected back to main server)
         while (PhotonNetwork.room != null || PhotonNetwork.connected == false)
             yield return 0;
-
-        TerminateAgoraEngine();
     }
 
     // Cleaning up the Agora engine during OnApplicationQuit() is an essential part of the Agora process with Unity. 
@@ -316,8 +314,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     {
         TerminateAgoraEngine();
     }
-
-
 
     [PunRPC]
     public void InvitePlayerToPartyChannel(int invitedID, string channelName)
