@@ -137,7 +137,7 @@ public class SpatialAudio : Photon.MonoBehaviour
     {
         if (photonView.isMine)
         {
-            for (int i = 0; i < players.Count - 1; i++)
+            for (int i = 0; i < players.Count; i++)
             {
                 float distanceToPlayer = Vector3.Distance(transform.position, players[i].position);
                 float gain = GetGainByPlayerDistance(distanceToPlayer);
