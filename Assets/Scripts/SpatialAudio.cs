@@ -58,16 +58,16 @@ public class SpatialAudio : Photon.MonoBehaviour
 
     IEnumerator AddNetworkedPlayersToSpatialAudioList()
     {
-        if(photonView.isMine == false)
+        if (photonView.isMine == false)
         {
             yield break;
         }
 
         GameObject[] otherPlayers = GameObject.FindGameObjectsWithTag("Player");
 
-        foreach(GameObject player in otherPlayers)
+        foreach (GameObject player in otherPlayers)
         {
-            if(player == this.gameObject)
+            if (player == this.gameObject)
             {
                 continue;
             }
@@ -99,7 +99,7 @@ public class SpatialAudio : Photon.MonoBehaviour
                 }
             }
 
-            if(isPlayerAlreadyInList == false)
+            if (isPlayerAlreadyInList == false)
             {
                 players.Add(player.transform);
                 playerUIDs.Add(playerNetworkID);
@@ -161,7 +161,7 @@ public class SpatialAudio : Photon.MonoBehaviour
         // Normalize the result between a value of 0f - 100f;
         float gain = (distanceToPlayer - agoraChatRadius.radius) / (MAX_CHAT_PROXIMITY - agoraChatRadius.radius);
         gain *= 100;
-        
+
         return gain;
     }
 
@@ -193,85 +193,4 @@ public class SpatialAudio : Photon.MonoBehaviour
 
         return pan;
     }
-
-    //IEnumerator AddNetworkedPlayerToSpatialAudioList(Collider otherPlayer)
-    //{
-    //    if (searchingNetworkForIDs == true)
-    //        yield break;
-
-    //    if(photonView.isMine)
-    //    {
-    //        searchingNetworkForIDs = true;
-
-    //        // When players spawn in, they can spawn on top of each other within 1-2 frames.
-    //        // The photon network needs a little longer to populate the proper IDs which can mess up functionality
-    //        // This timer is to give the Photon network 2 seconds to populate the proper IDs or the trigger overlap is nullified
-    //        uint triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
-    //        float networkTimer = 2f;
-    //        float networkWaitTime = 0f;
-
-    //        while (triggerPlayerID == 0)
-    //        {
-    //            triggerPlayerID = otherPlayer.GetComponent<AgoraVideoChat>().GetNetworkedUID();
-    //            networkWaitTime += Time.deltaTime;
-    //            if (networkWaitTime >= networkTimer)
-    //            {
-    //                Debug.LogError("Photon network time out for finding player network ID on player: " + otherPlayer.gameObject.name);
-    //                yield break;
-    //            }
-    //            yield return null;
-    //        }
-
-    //        // Now that we have made sure our network IDs are loaded, we can add players to the list
-    //        bool isDuplicatePlayer = false;
-    //        foreach (Transform player in players)
-    //        {
-    //            if (otherPlayer.transform == player)
-    //            {
-    //                isDuplicatePlayer = true;
-    //                break;
-    //            }
-    //        }
-    //        if (isDuplicatePlayer == false)
-    //        {
-    //            players.Add(otherPlayer.transform);
-    //            playerUIDs.Add(triggerPlayerID);
-    //        }
-
-    //        searchingNetworkForIDs = false;
-    //    }   
-    //}
-
-    //private void OnTriggerEnter(Collider other)
-    //{
-    //    if(photonView.isMine && other.CompareTag("Player"))
-    //    {
-    //        StartCoroutine(AddNetworkedPlayerToSpatialAudioList(other));
-    //    }
-    //}
-
-    //private void OnTriggerExit(Collider other)
-    //{
-    //    if(photonView.isMine && other.CompareTag("Player"))
-    //    {
-    //        for (int i = 0; i < players.Count; i++)
-    //        {
-    //            if (other.transform == players[i])
-    //            {
-    //                agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], 0, 0);
-    //                players.RemoveAt(i);
-    //                playerUIDs.RemoveAt(i);
-    //                break;
-    //            }
-    //        }
-    //    }
-    //}
-
-    //private void OnTriggerStay(Collider other)
-    //{
-    //    if (other.CompareTag("Player"))
-    //    {
-    //        UpdateSpatialAudio();
-    //    }
-    //}
 }
