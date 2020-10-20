@@ -18,8 +18,6 @@ public class SpatialAudio : Photon.MonoBehaviour
     private AgoraVideoChat agoraScript;
 
     private const float MAX_CHAT_PROXIMITY = 1.5f;
-    private const float PAN_MIN = -1f;
-    private const float PAN_MAX = 1f;
 
     void Start()
     {
