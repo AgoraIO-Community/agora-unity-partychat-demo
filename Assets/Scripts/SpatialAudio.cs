@@ -138,7 +138,7 @@ public class SpatialAudio : Photon.MonoBehaviour
 
     float GetGainByPlayerDistance(float distanceToPlayer)
     {
-        // Clamp incoming distance to Min and Max values
+        // Get distance to player, and restrict the value to Min and Max values
         distanceToPlayer = Mathf.Clamp(distanceToPlayer, MAX_CHAT_PROXIMITY, agoraChatRadius.radius);
 
         // Normalize the result between a value of 0f - 100f;
