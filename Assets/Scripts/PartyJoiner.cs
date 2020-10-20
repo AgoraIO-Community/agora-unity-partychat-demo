@@ -1,15 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-/* NOTE: 
- *
- * This script handles the Photon Network functionality, and the UI required to access player parties:
- * - 
- * - 
- * - 
- *
- */
-
 public class PartyJoiner : Photon.MonoBehaviour
 {
     [Header("Local Player Stats")]

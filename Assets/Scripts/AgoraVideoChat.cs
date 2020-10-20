@@ -6,12 +6,10 @@ using agora_gaming_rtc;
 
 
 /* NOTE: 
- *
  * This script handles the Agora-related functionality:
  * - Joining / Leaving Channels
  * - Creating / Deleting VideoSurface objects that enable us to see the camera feed of Agora party chat
  * - Managing the UI that contains the VideoSurface objects 
- *
  */
 
 
@@ -51,7 +49,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             return;
         }
             
-
         playerVideoList = new List<GameObject>();
 
         // Setup Agora Engine and Callbacks.
@@ -84,6 +81,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         mRtcEngine.OnLeaveChannel = OnLeaveChannelHandler;
         mRtcEngine.OnUserOffline = OnUserOfflineHandler;      
 
+        // Enable spatial audio in the Agora engine
         mRtcEngine.EnableSoundPositionIndication(true);
 
         // By setting our UID to "0" the Agora Engine creates a new one and assigns it. 
