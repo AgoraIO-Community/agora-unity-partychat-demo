@@ -159,13 +159,8 @@ public class SpatialAudio : Photon.MonoBehaviour
         // The length of the vector isn't important for this calculation, so the vector is normalized
         directionToRemotePlayer.Normalize();
 
-        // A value between -1 and 1 is produced, indicating the orientation of local player to the remote player
-        float dot = Vector3.Dot(transform.right, directionToRemotePlayer);
-
-        // The resulting dot product range of (-1, 1) is normalized to (0,1) to utilize Unity's Lerp function
-        float normalizedDot = (dot - PAN_MIN) / (PAN_MAX - PAN_MIN);
-
-        float pan = Mathf.Lerp(-1, 1, normalizedDot);
+        // When normazlid, a value between -1 and 1 is produced, indicating the orientation of local player to the remote player
+        float pan = Vector3.Dot(transform.right, directionToRemotePlayer);
 
         return pan;
     }
