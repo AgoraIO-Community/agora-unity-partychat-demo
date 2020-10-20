@@ -160,9 +160,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         myUID = uid;
 
-        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
-
         CreateUserVideoSurface(uid, true);
+
+        this.photonView.RPC("UpdateNetworkedPlayerUID", PhotonTargets.All, myUID.ToString());
     }
 
     // Remote Client Joins Channel.
@@ -175,7 +175,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         CreateUserVideoSurface(uid, false);
 
-        this.photonView.RPC("UpdatePlayerUID", PhotonTargets.All, myUID.ToString());
+        this.photonView.RPC("UpdateNetworkedPlayerUID", PhotonTargets.All, myUID.ToString());
     }
 
     // Local user leaves channel.
@@ -335,9 +335,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     }
 
     [PunRPC]
-    public void UpdatePlayerUID(string newUID)
+    public void UpdateNetworkedPlayerUID(string newUID)
     {
         networkedUID = uint.Parse(newUID);
-        //print("UpdatePlayerUID called for: " + newUID);
     }
 }
