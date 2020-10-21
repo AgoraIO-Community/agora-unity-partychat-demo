@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 114965449611606356}
   - component: {fileID: 114431670257695358}
   - component: {fileID: 135247917694409704}
+  - component: {fileID: 114354321687262272}
   m_Layer: 0
   m_Name: Charprefab
   m_TagString: Player
@@ -257,6 +258,18 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 3
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &114354321687262272
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100006}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ceaf92b494ea4ac1b124d7de1dca79e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &100008
 GameObject:
   m_ObjectHideFlags: 0

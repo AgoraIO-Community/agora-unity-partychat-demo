@@ -89,6 +89,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
     public string GetCurrentChannel() => channel;
 
+    public IRtcEngine GetAgoraEngine() => mRtcEngine;
+
     public void JoinRemoteChannel(string remoteChannelName)
     {
         if (!photonView.isMine)
