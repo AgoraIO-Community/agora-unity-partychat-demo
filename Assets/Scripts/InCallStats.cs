@@ -13,6 +13,7 @@ public class InCallStats : Photon.MonoBehaviour
     private LocalVideoStats broadcasterVideoStats;
     private RemoteVideoStats audienceVideoStats;
 
+    private bool fallbackToAudioOnly;
 
     // Start is called before the first frame update
     void Start()
@@ -21,11 +22,10 @@ public class InCallStats : Photon.MonoBehaviour
         {
             agoraEngine = null;
             isBroadcaster = false;
+            fallbackToAudioOnly = false;
             agoraScript = GetComponent<AgoraVideoChat>();
 
             StartCoroutine(AgoraEngineSetup());
-
-            print("photon owner ID " + photonView.ownerId);
         }
     }
 
@@ -80,8 +80,7 @@ public class InCallStats : Photon.MonoBehaviour
             {
                 agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
 
-                // Occurs when the remote media stream falls back to audio-only stream due to poor network conditions,
-                // or switches back to the video stream after the network conditions improve.
+                // Occurs when the remote media stream falls back etc.
                 agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
             }
 
@@ -97,6 +96,7 @@ public class InCallStats : Photon.MonoBehaviour
         if(photonView.isMine)
         {
             print("Local publish fallback - is falling back to audio only: " + isFallbackOrRecover);
+            fallbackToAudioOnly = isFallbackOrRecover;
         }
     }
 
@@ -105,36 +105,24 @@ public class InCallStats : Photon.MonoBehaviour
         if(photonView.isMine)
         {
             print("Remote subscribe fallback - UID of remote user: " + uid + " - is falling back to audio only: " + isFallbackOrRecover);
+            fallbackToAudioOnly = isFallbackOrRecover;
         }
     }
 
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
-        // you can monitor the steam switch between a high and low stream here
         if (photonView.isMine)
         {
             audienceVideoStats = remoteVideoStats;
-
-            print("--- RemoteVideo Stats ---");
-            print("uid: " + remoteVideoStats.uid);
-            //statsUID = remoteVideoStats.uid;
-            print("received bitrate: " + remoteVideoStats.receivedBitrate);
-            print("packet loss rate: " + remoteVideoStats.packetLossRate);
-            print("rx stream type: " + remoteVideoStats.rxStreamType);
-            print("--------------------------");
         }
     }
 
     void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
     {
-        broadcasterVideoStats = localVideoStats;
-
-        print("--- LocalVideo Stats ---");
-        print("sent bitrate: " + localVideoStats.sentBitrate);
-        print("target bitrate: " + localVideoStats.targetBitrate);
-        print("quality adapt indication: " + localVideoStats.qualityAdaptIndication);
-        print("codec type: " + localVideoStats.codecType);
-        print("--------------------------");
+        if(photonView.isMine)
+        {
+            broadcasterVideoStats = localVideoStats;
+        }
     }
 
     private void OnGUI()
@@ -145,7 +133,7 @@ public class InCallStats : Photon.MonoBehaviour
         {
             if (isBroadcaster)
             {
-                GUI.Box(new Rect(Screen.width - 200, 0, 200, 250), "Agora Local BROADCASTER Stats");
+                GUI.Box(new Rect(Screen.width - 200, 0, 200, 260), "Agora Local Broadcaster Stats");
                 GUI.Label(new Rect(Screen.width - 195, 15, 200, 200), "target bitrate: " + broadcasterVideoStats.targetBitrate);
                 GUI.Label(new Rect(Screen.width - 195, 30, 200, 200), "sent bitrate:  " + broadcasterVideoStats.sentBitrate);
                 GUI.Label(new Rect(Screen.width - 195, 45, 200, 200), "target framerate: " + broadcasterVideoStats.targetFrameRate);
@@ -158,10 +146,11 @@ public class InCallStats : Photon.MonoBehaviour
                 GUI.Label(new Rect(Screen.width - 195, 150, 200, 200), "encoded frame height: " + broadcasterVideoStats.encodedFrameHeight);
                 GUI.Label(new Rect(Screen.width - 195, 180, 200, 200), "quality adapt indication: " + broadcasterVideoStats.qualityAdaptIndication);
                 GUI.Label(new Rect(Screen.width - 195, 210, 200, 200), "codec type: " + broadcasterVideoStats.codecType);
+                GUI.Label(new Rect(Screen.width - 195, 240, 200, 200), "fallback to audio only: " + fallbackToAudioOnly);
             }
             else
             {
-                GUI.Box(new Rect(Screen.width - 215, 0, 220, 235), "Agora Remote AUDIENCE Stats");
+                GUI.Box(new Rect(Screen.width - 215, 0, 220, 250), "Agora Remote Audience Stats");
                 GUI.Label(new Rect(Screen.width - 210, 15, 200, 200), "uid: " + audienceVideoStats.uid);
                 GUI.Label(new Rect(Screen.width - 210, 30, 200, 200), "delay: " + audienceVideoStats.delay);
                 GUI.Label(new Rect(Screen.width - 210, 45, 200, 200), "width: " + audienceVideoStats.width);
@@ -174,11 +163,8 @@ public class InCallStats : Photon.MonoBehaviour
                 GUI.Label(new Rect(Screen.width - 210, 150, 200, 200), "total frozen time: " + audienceVideoStats.totalFrozenTime);
                 GUI.Label(new Rect(Screen.width - 210, 165, 200, 200), "frozen rate: " + audienceVideoStats.frozenRate);
                 GUI.Label(new Rect(Screen.width - 210, 195, 220, 200), "rx stream type: " + audienceVideoStats.rxStreamType);
+                GUI.Label(new Rect(Screen.width - 210, 225, 220, 200), "fallback to audio only: " + fallbackToAudioOnly);
             }
         }
-
-
-        
-        
     }
 }
