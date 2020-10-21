@@ -13,6 +13,7 @@ public class InCallStats : Photon.MonoBehaviour
     // if player is first player in the photon room, they are the publisher, else subscriber
 
 
+    private bool isPublisher;
 
     private AgoraVideoChat agoraScript;
     private IRtcEngine agoraEngine;
@@ -23,18 +24,15 @@ public class InCallStats : Photon.MonoBehaviour
         if(photonView.isMine)
         {
             agoraEngine = null;
+            isPublisher = false;
             agoraScript = GetComponent<AgoraVideoChat>();
 
             StartCoroutine(AgoraEngineSetup());
 
-            print("photon view ID " + photonView.viewID);
-            print("photon owner ID" + photonView.ownerId);
-            print("photon instantiation ID" + photonView.instantiationId);
-            //print("photon " + photonView.);
+            print("photon owner ID " + photonView.ownerId);
         }
     }
 
-    // Coroutine to get teh Agora Engine
     IEnumerator AgoraEngineSetup()
     {
         if(photonView.isMine)
@@ -66,16 +64,30 @@ public class InCallStats : Photon.MonoBehaviour
     {
         if (photonView.isMine)
         {
-            // Enables high and low bitrate data streams to subscribe to
+            agoraEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+
+            // Enables high and low bitrate data streams to subscribe to for variable network conditions.
             agoraEngine.EnableDualStreamMode(true);
 
-            // If publisher
-            agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+            // First player into the game is the PUBLISHER...
+            if (photonView.ownerId == 1)
+            {                
+                agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
 
-            // If subscriber
-            agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+                // Occurs when the locally published media stream falls back to an audio-only stream due to poor network conditions,
+                // or switches back to the video after the network conditions improve.
+                agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+            }
+            // ...all other joining players are SUBSCRIBERS.
+            else
+            {
+                agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
 
-            // callback subscriptions
+                // Occurs when the remote media stream falls back to audio-only stream due to poor network conditions,
+                // or switches back to the video stream after the network conditions improve.
+                agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+            }
+
             agoraEngine.OnLocalPublishFallbackToAudioOnly += OnLocalPublishFallbackToAudioOnlyCallback;
             agoraEngine.OnRemoteSubscribeFallbackToAudioOnly += OnRemoteSubscribeFallbackToAudioOnlyCallback;
             agoraEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
