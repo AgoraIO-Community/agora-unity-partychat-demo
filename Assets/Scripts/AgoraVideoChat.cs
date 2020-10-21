@@ -26,6 +26,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private string originalChannel;
     private IRtcEngine mRtcEngine;
     private uint myUID = 0;
+    [SerializeField]
+    CLIENT_ROLE_TYPE myClientRole;
 
     [Header("Player Video Panel Properties")]
     [SerializeField]
@@ -78,6 +80,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         mRtcEngine.OnUserJoined = OnUserJoinedHandler;
         mRtcEngine.OnLeaveChannel = OnLeaveChannelHandler;
         mRtcEngine.OnUserOffline = OnUserOfflineHandler;
+        mRtcEngine.OnClientRoleChanged = OnClientRoleChangedHandler;
 
         // Your video feed will not render if EnableVideo() isn't called. 
         mRtcEngine.EnableVideo();
@@ -181,6 +184,11 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         }
 
         RemoveUserVideoSurface(uid);
+    }
+
+    private void OnClientRoleChangedHandler(CLIENT_ROLE_TYPE oldRole, CLIENT_ROLE_TYPE newRole)
+    {
+        myClientRole = newRole;
     }
     #endregion
 

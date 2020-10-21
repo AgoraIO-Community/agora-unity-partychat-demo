@@ -5,18 +5,14 @@ using agora_gaming_rtc;
 
 public class InCallStats : Photon.MonoBehaviour
 {
-    // Stream Fallback
-    // Call stats
-
-
-    // this isn't for a uniform group chat. this is based on a publish/subscribe broadcast paradigm
-    // if player is first player in the photon room, they are the publisher, else subscriber
-
-
-    private bool isPublisher;
+    private bool isBroadcaster;
 
     private AgoraVideoChat agoraScript;
     private IRtcEngine agoraEngine;
+
+    private LocalVideoStats broadcasterVideoStats;
+    private RemoteVideoStats audienceVideoStats;
+
 
     // Start is called before the first frame update
     void Start()
@@ -24,7 +20,7 @@ public class InCallStats : Photon.MonoBehaviour
         if(photonView.isMine)
         {
             agoraEngine = null;
-            isPublisher = false;
+            isBroadcaster = false;
             agoraScript = GetComponent<AgoraVideoChat>();
 
             StartCoroutine(AgoraEngineSetup());
@@ -73,6 +69,7 @@ public class InCallStats : Photon.MonoBehaviour
             if (photonView.ownerId == 1)
             {                
                 agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+                isBroadcaster = true;
 
                 // Occurs when the locally published media stream falls back to an audio-only stream due to poor network conditions,
                 // or switches back to the video after the network conditions improve.
@@ -88,9 +85,10 @@ public class InCallStats : Photon.MonoBehaviour
                 agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
             }
 
-            agoraEngine.OnLocalPublishFallbackToAudioOnly += OnLocalPublishFallbackToAudioOnlyCallback;
-            agoraEngine.OnRemoteSubscribeFallbackToAudioOnly += OnRemoteSubscribeFallbackToAudioOnlyCallback;
-            agoraEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+            agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+            agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
+            agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
+            agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
         }
     }
 
@@ -115,12 +113,72 @@ public class InCallStats : Photon.MonoBehaviour
         // you can monitor the steam switch between a high and low stream here
         if (photonView.isMine)
         {
+            audienceVideoStats = remoteVideoStats;
+
             print("--- RemoteVideo Stats ---");
             print("uid: " + remoteVideoStats.uid);
+            //statsUID = remoteVideoStats.uid;
             print("received bitrate: " + remoteVideoStats.receivedBitrate);
             print("packet loss rate: " + remoteVideoStats.packetLossRate);
             print("rx stream type: " + remoteVideoStats.rxStreamType);
             print("--------------------------");
         }
+    }
+
+    void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
+    {
+        broadcasterVideoStats = localVideoStats;
+
+        print("--- LocalVideo Stats ---");
+        print("sent bitrate: " + localVideoStats.sentBitrate);
+        print("target bitrate: " + localVideoStats.targetBitrate);
+        print("quality adapt indication: " + localVideoStats.qualityAdaptIndication);
+        print("codec type: " + localVideoStats.codecType);
+        print("--------------------------");
+    }
+
+    private void OnGUI()
+    {
+        // Rect(left most, top most, total width, total height)
+
+        if(photonView.isMine)
+        {
+            if (isBroadcaster)
+            {
+                GUI.Box(new Rect(Screen.width - 200, 0, 200, 250), "Agora Local BROADCASTER Stats");
+                GUI.Label(new Rect(Screen.width - 195, 15, 200, 200), "target bitrate: " + broadcasterVideoStats.targetBitrate);
+                GUI.Label(new Rect(Screen.width - 195, 30, 200, 200), "sent bitrate:  " + broadcasterVideoStats.sentBitrate);
+                GUI.Label(new Rect(Screen.width - 195, 45, 200, 200), "target framerate: " + broadcasterVideoStats.targetFrameRate);
+                GUI.Label(new Rect(Screen.width - 195, 60, 200, 200), "sent framerate: " + broadcasterVideoStats.sentFrameRate);
+                GUI.Label(new Rect(Screen.width - 195, 75, 200, 200), "encoder output framerate: " + broadcasterVideoStats.encoderOutputFrameRate);
+                GUI.Label(new Rect(Screen.width - 195, 90, 200, 200), "renderer output framerate: " + broadcasterVideoStats.rendererOutputFrameRate);
+                GUI.Label(new Rect(Screen.width - 195, 105, 200, 200), "encoded bitrate: " + broadcasterVideoStats.encodedBitrate);
+                GUI.Label(new Rect(Screen.width - 195, 120, 200, 200), "encoded frame count: " + broadcasterVideoStats.encodedFrameCount);
+                GUI.Label(new Rect(Screen.width - 195, 135, 200, 200), "encoded frame width: " + broadcasterVideoStats.encodedFrameWidth);
+                GUI.Label(new Rect(Screen.width - 195, 150, 200, 200), "encoded frame height: " + broadcasterVideoStats.encodedFrameHeight);
+                GUI.Label(new Rect(Screen.width - 195, 180, 200, 200), "quality adapt indication: " + broadcasterVideoStats.qualityAdaptIndication);
+                GUI.Label(new Rect(Screen.width - 195, 210, 200, 200), "codec type: " + broadcasterVideoStats.codecType);
+            }
+            else
+            {
+                GUI.Box(new Rect(Screen.width - 215, 0, 220, 235), "Agora Remote AUDIENCE Stats");
+                GUI.Label(new Rect(Screen.width - 210, 15, 200, 200), "uid: " + audienceVideoStats.uid);
+                GUI.Label(new Rect(Screen.width - 210, 30, 200, 200), "delay: " + audienceVideoStats.delay);
+                GUI.Label(new Rect(Screen.width - 210, 45, 200, 200), "width: " + audienceVideoStats.width);
+                GUI.Label(new Rect(Screen.width - 210, 60, 200, 200), "height: " + audienceVideoStats.height);
+                GUI.Label(new Rect(Screen.width - 210, 75, 200, 200), "received bitrate: " + audienceVideoStats.receivedBitrate);
+                GUI.Label(new Rect(Screen.width - 210, 90, 200, 200), "decoder output framerate: " + audienceVideoStats.decoderOutputFrameRate);
+                GUI.Label(new Rect(Screen.width - 210, 105, 200, 200), "renderer output framerate: " + audienceVideoStats.rendererOutputFrameRate);
+                GUI.Label(new Rect(Screen.width - 210, 120, 200, 200), "packet loss rate: " + audienceVideoStats.packetLossRate);
+                GUI.Label(new Rect(Screen.width - 210, 135, 200, 200), "toal active time: " + audienceVideoStats.totalActiveTime);
+                GUI.Label(new Rect(Screen.width - 210, 150, 200, 200), "total frozen time: " + audienceVideoStats.totalFrozenTime);
+                GUI.Label(new Rect(Screen.width - 210, 165, 200, 200), "frozen rate: " + audienceVideoStats.frozenRate);
+                GUI.Label(new Rect(Screen.width - 210, 195, 220, 200), "rx stream type: " + audienceVideoStats.rxStreamType);
+            }
+        }
+
+
+        
+        
     }
 }
