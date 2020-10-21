@@ -64,6 +64,15 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         // Initialize Agora engine
         mRtcEngine = IRtcEngine.GetEngine(appID);
 
+        // Setup square video profile
+        VideoEncoderConfiguration config = new VideoEncoderConfiguration();
+        config.dimensions.width = 480;
+        config.dimensions.height = 480;
+        config.frameRate = FRAME_RATE.FRAME_RATE_FPS_15;
+        config.bitrate = 800;
+        config.degradationPreference = DEGRADATION_PREFERENCE.MAINTAIN_QUALITY;
+        mRtcEngine.SetVideoEncoderConfiguration(config);
+
         // Setup our callbacks (there are many other Agora callbacks, however these are the calls we need).
         mRtcEngine.OnJoinChannelSuccess = OnJoinChannelSuccessHandler;
         mRtcEngine.OnUserJoined = OnUserJoinedHandler;
