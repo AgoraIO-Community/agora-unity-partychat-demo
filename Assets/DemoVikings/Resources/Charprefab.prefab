@@ -220,7 +220,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011cfb7e7b533474eaae30c0a0194149, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  appID: 57481146914f4cddaa220d6f7a045063
+  appID: 
   channel: unity3d
   userVideoPrefab: {fileID: 1272405541118282648, guid: 9c09429efb77d4336ab9650b8f03362e,
     type: 3}
