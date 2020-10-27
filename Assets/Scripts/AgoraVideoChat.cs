@@ -146,7 +146,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         myUID = uid;
 
 
-        GetComponent<InCallStats>().TurnBroadcastersGold();
+       // GetComponent<InCallStats>().TurnBroadcastersGold();
         if(myClientRole == CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER)
         {
             CreateUserVideoSurface(uid, true);
@@ -159,7 +159,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         if (!photonView.isMine)
             return;
 
-        GetComponent<InCallStats>().TurnBroadcastersGold();
+        //GetComponent<InCallStats>().TurnBroadcastersGold();
         CreateUserVideoSurface(uid, false);
     }
 

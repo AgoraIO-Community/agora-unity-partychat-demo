@@ -122,7 +122,7 @@ public class InCallStats : Photon.MonoBehaviour
             agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
             isBroadcaster = true;
 
-            TurnBroadcastersGold();
+            photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
 
             PartyUIContainer.SetActive(true);
             BroadCastSelectionPanel.SetActive(false);
@@ -135,7 +135,10 @@ public class InCallStats : Photon.MonoBehaviour
 
     public void TurnBroadcastersGold()
     {
-        photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
+        if(photonView.isMine)
+        {
+            photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
+        }
     }
 
     [PunRPC]
