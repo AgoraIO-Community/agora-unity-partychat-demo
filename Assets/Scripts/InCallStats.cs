@@ -136,7 +136,9 @@ public class InCallStats : Photon.MonoBehaviour
     public void TurnVikingGold()
     {
         if(isBroadcaster)
+        {
             photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
+        }
     }
 
     [PunRPC]
@@ -180,11 +182,6 @@ public class InCallStats : Photon.MonoBehaviour
         {
             CallStatsPanel.SetActive(true);
         }
-    }
-
-    public void ButtonUpdateColor()
-    {
-
     }
 
     void UpdateCallStatsUI()
