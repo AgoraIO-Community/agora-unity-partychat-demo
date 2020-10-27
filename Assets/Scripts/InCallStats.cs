@@ -25,6 +25,12 @@ public class InCallStats : Photon.MonoBehaviour
     private Text callStatsText;
     [SerializeField]
     private GameObject ToggleStatsButton;
+
+    [Header("Broadcaster")]
+    [SerializeField]
+    private Material broadcasterMaterial;
+    [SerializeField]
+    private SkinnedMeshRenderer vikingMesh;
     
     void Start()
     {
@@ -115,6 +121,8 @@ public class InCallStats : Photon.MonoBehaviour
             agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
             agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
             isBroadcaster = true;
+
+            vikingMesh.material = broadcasterMaterial;
 
             PartyUIContainer.SetActive(true);
             BroadCastSelectionPanel.SetActive(false);

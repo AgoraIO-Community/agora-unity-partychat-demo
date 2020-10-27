@@ -26,7 +26,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private string originalChannel;
     private IRtcEngine mRtcEngine;
     private uint myUID = 0;
-    [SerializeField]
     CLIENT_ROLE_TYPE myClientRole;
 
     [Header("Player Video Panel Properties")]
@@ -36,8 +35,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private Transform spawnPoint;
     [SerializeField]
     private RectTransform content;
-    [SerializeField]
-    private float spaceBetweenUserVideos = 150f;
+    private const float SpaceBetweenUserVideos = 150f;
     private List<GameObject> playerVideoList;
 
     public delegate void AgoraCustomEvent();
@@ -209,7 +207,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         }
 
         // Get the next position for newly created VideoSurface to place inside UI Container.
-        float spawnY = playerVideoList.Count * spaceBetweenUserVideos;
+        float spawnY = playerVideoList.Count * SpaceBetweenUserVideos;
         Vector3 spawnPosition = new Vector3(0, -spawnY, 0);
 
         // Create Gameobject that will serve as our VideoSurface.
@@ -240,7 +238,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         newVideoSurface.SetGameFps(30);
 
         // Update our "Content" container that holds all the newUserVideo image planes
-        content.sizeDelta = new Vector2(0, playerVideoList.Count * spaceBetweenUserVideos + 140);
+        content.sizeDelta = new Vector2(0, playerVideoList.Count * SpaceBetweenUserVideos + 140);
 
         UpdatePlayerVideoPostions();
         UpdateLeavePartyButtonState();
@@ -262,7 +260,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         UpdatePlayerVideoPostions();
 
         Vector2 oldContent = content.sizeDelta;
-        content.sizeDelta = oldContent + Vector2.down * spaceBetweenUserVideos;
+        content.sizeDelta = oldContent + Vector2.down * SpaceBetweenUserVideos;
         content.anchoredPosition = Vector2.zero;
 
         UpdateLeavePartyButtonState();
@@ -272,7 +270,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     {
         for (int i = 0; i < playerVideoList.Count; i++)
         {
-            playerVideoList[i].GetComponent<RectTransform>().anchoredPosition = Vector2.down * spaceBetweenUserVideos * i;
+            playerVideoList[i].GetComponent<RectTransform>().anchoredPosition = Vector2.down * SpaceBetweenUserVideos * i;
         }
     }
 
