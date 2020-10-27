@@ -122,7 +122,6 @@ public class InCallStats : Photon.MonoBehaviour
             agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
             isBroadcaster = true;
 
-            //photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
             TurnVikingGold();
 
             PartyUIContainer.SetActive(true);
@@ -134,18 +133,16 @@ public class InCallStats : Photon.MonoBehaviour
         }
     }
 
-
     public void TurnVikingGold()
     {
-        photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
+        if(isBroadcaster)
+            photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
     }
 
     [PunRPC]
     public void UpdateBroadcasterMaterial()
     {
-
-        vikingMesh.material = broadcasterMaterial;
-        
+        vikingMesh.material = broadcasterMaterial;   
     }
 
     public void SetPlayerAsAudience()
@@ -183,6 +180,11 @@ public class InCallStats : Photon.MonoBehaviour
         {
             CallStatsPanel.SetActive(true);
         }
+    }
+
+    public void ButtonUpdateColor()
+    {
+
     }
 
     void UpdateCallStatsUI()
