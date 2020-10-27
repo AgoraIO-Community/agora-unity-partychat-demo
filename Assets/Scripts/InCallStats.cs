@@ -15,6 +15,12 @@ public class InCallStats : Photon.MonoBehaviour
 
     private bool fallbackToAudioOnly;
 
+    [SerializeField]
+    private GameObject BroadCastSelectionPanel;
+    [SerializeField]
+    private GameObject PartyUIContainer;
+    
+
     // Start is called before the first frame update
     void Start()
     {
@@ -24,6 +30,9 @@ public class InCallStats : Photon.MonoBehaviour
             isBroadcaster = false;
             fallbackToAudioOnly = false;
             agoraScript = GetComponent<AgoraVideoChat>();
+
+            PartyUIContainer.SetActive(false);
+            BroadCastSelectionPanel.SetActive(true);
 
             StartCoroutine(AgoraEngineSetup());
         }
@@ -45,18 +54,18 @@ public class InCallStats : Photon.MonoBehaviour
 
                 if (engineTimer >= engineTimeout)
                 {
-                    Debug.LogError("No Agora Engine Found.");
+                    Debug.LogError("InCallStats AgoraEngineSetup() Failure - No Agora Engine Found.");
                     yield break;
                 }
 
                 yield return null;
             }
 
-            InitializeStreamFallback();
+            //InitializeStreamFallback();
         }
     }
 
-    void InitializeStreamFallback()
+    /*void InitializeStreamFallback()
     {
         if (photonView.isMine)
         {
@@ -85,11 +94,11 @@ public class InCallStats : Photon.MonoBehaviour
             }
 
             agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+            agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
             agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
             agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
-            agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
         }
-    }
+    }*/
 
     void OnLocalPublishFallbackToAudioOnlyCallback(bool isFallbackOrRecover)
     {
@@ -97,6 +106,14 @@ public class InCallStats : Photon.MonoBehaviour
         {
             print("Local publish fallback - is falling back to audio only: " + isFallbackOrRecover);
             fallbackToAudioOnly = isFallbackOrRecover;
+        }
+    }
+
+    void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
+    {
+        if (photonView.isMine)
+        {
+            broadcasterVideoStats = localVideoStats;
         }
     }
 
@@ -117,18 +134,12 @@ public class InCallStats : Photon.MonoBehaviour
         }
     }
 
-    void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
-    {
-        if(photonView.isMine)
-        {
-            broadcasterVideoStats = localVideoStats;
-        }
-    }
+    
 
     private void OnGUI()
     {
         // Rect(left most, top most, total width, total height)
-
+    
         if(photonView.isMine)
         {
             if (isBroadcaster)
@@ -166,5 +177,52 @@ public class InCallStats : Photon.MonoBehaviour
                 GUI.Label(new Rect(Screen.width - 210, 225, 220, 200), "fallback to audio only: " + fallbackToAudioOnly);
             }
         }
+    }
+
+
+    public void SetPlayerAsBroadCaster()
+    {
+        if(photonView.isMine)
+        {
+            print("setting player as broadcaster");
+            agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+            isBroadcaster = true;
+
+            agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+
+            InitializeCallbacks();
+
+            PartyUIContainer.SetActive(true);
+            BroadCastSelectionPanel.SetActive(false);
+
+            agoraScript.JoinChannel();
+        }
+    }
+
+    public void SetPlayerAsAudience()
+    {
+        if (photonView.isMine)
+        {
+            print("setting player as audience");
+            agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
+            isBroadcaster = false;
+
+            agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+
+            InitializeCallbacks();
+
+            PartyUIContainer.SetActive(true);
+            BroadCastSelectionPanel.SetActive(false);
+
+            agoraScript.JoinChannel();
+        }
+    }
+
+    void InitializeCallbacks()
+    {
+        agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+        agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
+        agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
+        agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
     }
 }

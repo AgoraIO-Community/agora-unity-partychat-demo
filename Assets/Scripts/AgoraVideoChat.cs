@@ -51,7 +51,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             return;
         }
             
-
         playerVideoList = new List<GameObject>();
 
         // Setup Agora Engine and Callbacks.
@@ -85,7 +84,10 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         // Your video feed will not render if EnableVideo() isn't called. 
         mRtcEngine.EnableVideo();
         mRtcEngine.EnableVideoObserver();
+    }
 
+    public void JoinChannel()
+    {
         // By setting our UID to "0" the Agora Engine creates a new one and assigns it. 
         mRtcEngine.JoinChannel(channel, null, 0);
     }
