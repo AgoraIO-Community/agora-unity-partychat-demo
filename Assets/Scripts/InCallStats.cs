@@ -136,10 +136,9 @@ public class InCallStats : Photon.MonoBehaviour
     [PunRPC]
     public void UpdateBroadcasterMaterial()
     {
-        if(photonView.isMine)
-        {
+
             vikingMesh.material = broadcasterMaterial;
-        }
+
     }
 
     public void SetPlayerAsAudience()
