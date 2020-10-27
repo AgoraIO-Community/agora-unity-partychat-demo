@@ -121,8 +121,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         {
             return;
         }
-
-
         /* NOTE:
          * Say I'm in my original channel - "myChannel" - and someone joins me.
          * If I want to leave the party, and go back to my original channel, someone is already in it!
@@ -149,7 +147,10 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
         myUID = uid;
 
-        CreateUserVideoSurface(uid, true);
+        if(myClientRole == CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER)
+        {
+            CreateUserVideoSurface(uid, true);
+        }
     }
 
     // Remote Client Joins Channel.
@@ -157,6 +158,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     {
         if (!photonView.isMine)
             return;
+
 
         CreateUserVideoSurface(uid, false);
     }
