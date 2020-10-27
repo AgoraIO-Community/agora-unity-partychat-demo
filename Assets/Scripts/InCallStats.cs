@@ -139,6 +139,12 @@ public class InCallStats : Photon.MonoBehaviour
         {
             photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
         }
+
+
+        if(photonView.isMine)
+        {
+            print("Turn viking gold called");
+        }
     }
 
     [PunRPC]
