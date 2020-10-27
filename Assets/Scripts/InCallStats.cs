@@ -133,21 +133,12 @@ public class InCallStats : Photon.MonoBehaviour
         }
     }
 
-    public void TurnBroadcastersGold()
-    {
-        if(photonView.isMine)
-        {
-            photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
-        }
-    }
-
     [PunRPC]
     public void UpdateBroadcasterMaterial()
     {
-        if(isBroadcaster)
-        {
-            vikingMesh.material = broadcasterMaterial;
-        }
+
+        vikingMesh.material = broadcasterMaterial;
+        
     }
 
     public void SetPlayerAsAudience()
