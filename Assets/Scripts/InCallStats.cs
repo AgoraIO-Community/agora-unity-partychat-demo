@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using agora_gaming_rtc;
 
-public class InCallStats : Photon.MonoBehaviour
+public class InCallStats : Photon.PunBehaviour
 {
     private bool isBroadcaster;
     private bool fallbackToAudioOnly;
@@ -52,7 +52,7 @@ public class InCallStats : Photon.MonoBehaviour
 
     IEnumerator AgoraEngineSetup()
     {
-        if(photonView.isMine)
+        if (photonView.isMine)
         {
             agoraEngine = agoraScript.GetAgoraEngine();
             float engineTimer = 0f;
@@ -73,17 +73,17 @@ public class InCallStats : Photon.MonoBehaviour
                 yield return null;
             }
 
-            agoraEngine.OnUserJoined = OnUserJoinedHandler;
             agoraEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
             BroadCastSelectionPanel.SetActive(true);
         }
     }
 
-    // Remote Client Joins Channel.
-    private void OnUserJoinedHandler(uint uid, int elapsed)
+    public override void OnPhotonPlayerConnected(PhotonPlayer newPlayer)
     {
-        if (photonView.isMine)
+        if(photonView.isMine)
         {
+            base.OnPhotonPlayerConnected(newPlayer);
+
             TurnVikingGold();
         }
     }
