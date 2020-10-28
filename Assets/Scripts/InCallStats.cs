@@ -124,28 +124,17 @@ public class InCallStats : Photon.PunBehaviour
         }
     }
 
-    public void SetPlayerAsBroadCaster()
+    void InitializeCallbacks()
     {
-        if(photonView.isMine)
-        {
-            agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
-            agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
-            isBroadcaster = true;
-
-            TurnVikingGold();
-
-            PartyUIContainer.SetActive(true);
-            BroadCastSelectionPanel.SetActive(false);
-            ToggleStatsButton.SetActive(true);
-
-            InitializeCallbacks();
-            agoraScript.JoinChannel();
-        }
+        agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+        agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
+        agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
+        agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
     }
 
     public void TurnVikingGold()
     {
-        if(isBroadcaster)
+        if (isBroadcaster)
         {
             photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
         }
@@ -154,16 +143,27 @@ public class InCallStats : Photon.PunBehaviour
     [PunRPC]
     public void UpdateBroadcasterMaterial()
     {
-        vikingMesh.material = broadcasterMaterial;   
+        vikingMesh.material = broadcasterMaterial;
     }
 
-    public void SetPlayerAsAudience()
+    public void ButtonSetBroadCastState(bool isNewStateBroadcaster)
     {
         if (photonView.isMine)
         {
-            agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
-            agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
-            isBroadcaster = false;
+            if (isNewStateBroadcaster)
+            {
+                agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_BROADCASTER);
+                agoraEngine.SetLocalPublishFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+                isBroadcaster = true;
+
+                TurnVikingGold();
+            }
+            else
+            {
+                agoraEngine.SetClientRole(CLIENT_ROLE_TYPE.CLIENT_ROLE_AUDIENCE);
+                agoraEngine.SetRemoteSubscribeFallbackOption(STREAM_FALLBACK_OPTIONS.STREAM_FALLBACK_OPTION_AUDIO_ONLY);
+                isBroadcaster = false;
+            }
 
             PartyUIContainer.SetActive(true);
             BroadCastSelectionPanel.SetActive(false);
@@ -172,14 +172,6 @@ public class InCallStats : Photon.PunBehaviour
             InitializeCallbacks();
             agoraScript.JoinChannel();
         }
-    }
-
-    void InitializeCallbacks()
-    {
-        agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
-        agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
-        agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
-        agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
     }
 
     public void ButtonToggleAgoraStreamStats()
@@ -199,7 +191,7 @@ public class InCallStats : Photon.PunBehaviour
         if (isBroadcaster)
         {
             callStatsText.text =
-            "Agora Local Broadcaster Stats" +
+            "Agora Broadcaster Stats" +
             "\ntarget bitrate: " + broadcasterVideoStats.targetBitrate +
             "\nsent bitrate: " + broadcasterVideoStats.sentBitrate +
             "\ntarget framerate: " + broadcasterVideoStats.targetFrameRate +
@@ -217,7 +209,7 @@ public class InCallStats : Photon.PunBehaviour
         else
         {
             callStatsText.text =
-            "Agora Remote Audience Stats" +
+            "Agora Audience Stats" +
             "\nuid: " + audienceVideoStats.uid +
             "\ndelay: " + audienceVideoStats.delay +
             "\nwidth: " + audienceVideoStats.width +

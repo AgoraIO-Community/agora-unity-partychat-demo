@@ -3,18 +3,12 @@ using System.Collections.Generic;
 using UnityEngine; 
 using agora_gaming_rtc;
 
-
-
 /* NOTE: 
- *
  * This script handles the Agora-related functionality:
  * - Joining / Leaving Channels
  * - Creating / Deleting VideoSurface objects that enable us to see the camera feed of Agora party chat
- * - Managing the UI that contains the VideoSurface objects 
- *
+ * - Managing the UI that contains the VideoSurface objects
  */
-
-
 
 public class AgoraVideoChat : Photon.MonoBehaviour
 {
