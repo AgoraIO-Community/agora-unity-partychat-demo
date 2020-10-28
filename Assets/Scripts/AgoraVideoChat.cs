@@ -140,8 +140,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     // Local Client Joins Channel.
     private void OnJoinChannelSuccessHandler(string channelName, uint uid, int elapsed)
     {
-        GetComponent<InCallStats>().TurnVikingGold();
-
         if (!photonView.isMine)
             return;
 
@@ -156,8 +154,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     // Remote Client Joins Channel.
     private void OnUserJoinedHandler(uint uid, int elapsed)
     {
-        GetComponent<InCallStats>().TurnVikingGold();
-
         if (!photonView.isMine)
             return;
 

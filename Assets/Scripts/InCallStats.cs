@@ -73,8 +73,18 @@ public class InCallStats : Photon.MonoBehaviour
                 yield return null;
             }
 
+            agoraEngine.OnUserJoined = OnUserJoinedHandler;
             agoraEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
             BroadCastSelectionPanel.SetActive(true);
+        }
+    }
+
+    // Remote Client Joins Channel.
+    private void OnUserJoinedHandler(uint uid, int elapsed)
+    {
+        if (photonView.isMine)
+        {
+            TurnVikingGold();
         }
     }
 
@@ -138,12 +148,6 @@ public class InCallStats : Photon.MonoBehaviour
         if(isBroadcaster)
         {
             photonView.RPC("UpdateBroadcasterMaterial", PhotonTargets.All);
-        }
-
-
-        if(photonView.isMine)
-        {
-            print("Turn viking gold called");
         }
     }
 
