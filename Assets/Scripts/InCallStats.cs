@@ -74,6 +74,7 @@ public class InCallStats : Photon.PunBehaviour
             }
 
             agoraEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
+            InitializeCallbacks();
             BroadCastSelectionPanel.SetActive(true);
         }
     }
@@ -168,8 +169,7 @@ public class InCallStats : Photon.PunBehaviour
             PartyUIContainer.SetActive(true);
             BroadCastSelectionPanel.SetActive(false);
             ToggleStatsButton.SetActive(true);
-
-            InitializeCallbacks();
+            
             agoraScript.JoinChannel();
         }
     }
