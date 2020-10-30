@@ -190,14 +190,14 @@ MonoBehaviour:
   delayText: {fileID: 66377165786732549}
   widthText: {fileID: 2741735240794080367}
   heightText: {fileID: 333896535970271839}
-  receiverBitrateText: {fileID: 0}
-  packetLossRateText: {fileID: 0}
-  activeTimeText: {fileID: 0}
-  frozenTimeText: {fileID: 0}
-  frameRateText: {fileID: 0}
-  decoderOutputFrameRateText: {fileID: 0}
-  rendererOutputFramerateText: {fileID: 0}
-  rxStreamTypeText: {fileID: 0}
+  receivedBitrateText: {fileID: 8431143064618518149}
+  packetLossRateText: {fileID: 3265420150041485445}
+  activeTimeText: {fileID: 4345035894151528562}
+  frozenTimeText: {fileID: 3186051091008268484}
+  frozenRateText: {fileID: 7432679782516726828}
+  decoderOutputFrameRateText: {fileID: 8116026033591099373}
+  rendererOutputFramerateText: {fileID: 7368480501071175549}
+  rxStreamTypeText: {fileID: 1190097679565375197}
 --- !u!1 &1308626063723122933
 GameObject:
   m_ObjectHideFlags: 0
@@ -1197,7 +1197,7 @@ GameObject:
   - component: {fileID: 5148223171876561359}
   - component: {fileID: 7432679782516726828}
   m_Layer: 5
-  m_Name: FrameRateText
+  m_Name: FrozenRateText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1317,7 +1317,7 @@ PrefabInstance:
     - target: {fileID: 4892111586398001733, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
       propertyPath: m_Name
-      value: FrameRateText
+      value: FrozenRateText
       objectReference: {fileID: 0}
     - target: {fileID: 5731455138612916874, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
