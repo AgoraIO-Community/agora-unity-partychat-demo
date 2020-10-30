@@ -7,7 +7,8 @@ using agora_gaming_rtc;
 
 public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 {
-
+    [SerializeField]
+    private bool isLocalVideo = false;
     private GameObject statsPanel;
     private bool fallbackToAudioOnly;
 
@@ -35,7 +36,14 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
         AgoraVideoChat.mRtcEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
         AgoraVideoChat.mRtcEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
-         
+        AgoraVideoChat.mRtcEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
+        AgoraVideoChat.mRtcEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+    }
+
+    public void SetIsLocal(bool isLocal)
+    {
+        isLocalVideo = isLocal;
+        print("setting " + gameObject.name + " isLocal to " + isLocal);
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -47,6 +55,32 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         else
         {
             statsPanel.SetActive(true);
+        }
+    }
+
+    void OnLocalPublishFallbackToAudioOnlyCallback(bool isFallbackOrRecover)
+    {
+        print("Local publish fallback - is falling back to audio only: " + isFallbackOrRecover);
+        fallbackToAudioOnly = isFallbackOrRecover;
+    }
+
+    void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
+    {
+        if(isLocalVideo)
+        {
+            uidText.text = "uid: " + gameObject.name;
+            fallbackText.text = "Fallback to audio only: " + fallbackToAudioOnly;
+            delayText.text = "Eframe ct: " + localVideoStats.encodedFrameCount;
+            widthText.text = "Eframe height: " + localVideoStats.encodedFrameHeight;
+            heightText.text = "Eframe width: " + localVideoStats.encodedFrameWidth;
+            receivedBitrateText.text = "Sent frame rate: " + localVideoStats.sentFrameRate;
+            packetLossRateText.text = "Target frame rate: " + localVideoStats.targetFrameRate;
+            activeTimeText.text = "Enc bit rate: " + localVideoStats.encodedBitrate;
+            frozenTimeText.text = "Sent bitrate: " + localVideoStats.sentBitrate;
+            frozenRateText.text = "Target bitrate: " + localVideoStats.targetBitrate;
+            decoderOutputFrameRateText.text = "Quality adapt: " + localVideoStats.qualityAdaptIndication;
+            rendererOutputFramerateText.text = "";
+            rxStreamTypeText.text = "Codec type: " + localVideoStats.codecType;
         }
     }
 

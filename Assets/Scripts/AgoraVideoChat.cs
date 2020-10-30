@@ -215,6 +215,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         newUserVideo.name = uid.ToString();
         newUserVideo.transform.SetParent(spawnPoint, false);
         
+        
         Vector3 imageRotation = new Vector3(0, 0, 180f);
         newUserVideo.transform.rotation = Quaternion.Euler(imageRotation);
 
@@ -231,6 +232,10 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         if (isLocalUser == false)
         {
             newVideoSurface.SetForUser(uid);
+        }
+        else
+        {
+            newUserVideo.GetComponent<UserStatsUI>().SetIsLocal(true);
         }
         newVideoSurface.SetGameFps(30);
 

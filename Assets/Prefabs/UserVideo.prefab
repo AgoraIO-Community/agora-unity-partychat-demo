@@ -74,10 +74,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 'Decoder output frame rate
@@ -185,6 +185,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a595935cb8cbc4846b93b146c86ea99e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isLocalVideo: 0
   uidText: {fileID: 7801236695908352970}
   fallbackText: {fileID: 4485091494857998736}
   delayText: {fileID: 66377165786732549}
@@ -272,10 +273,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Frozen Time
@@ -353,10 +354,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Width 1400
@@ -434,10 +435,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Rx Stream Type
@@ -515,10 +516,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Receiver Bitrate
@@ -596,10 +597,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 'uid: 009090909090909
@@ -679,10 +680,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Height 1400
@@ -760,10 +761,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Delay 0
@@ -841,10 +842,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 'Fallback to audio only: False
@@ -924,10 +925,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 'Renderer output frame rate
@@ -1007,10 +1008,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Active Time
@@ -1088,10 +1089,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: Packet Loss Rate 0
@@ -1258,10 +1259,10 @@ MonoBehaviour:
     m_BestFit: 0
     m_MinSize: 10
     m_MaxSize: 40
-    m_Alignment: 0
+    m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
-    m_HorizontalOverflow: 0
+    m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
   m_Text: 'Frame Rate
@@ -1274,10 +1275,30 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5201403136318044051}
     m_Modifications:
+    - target: {fileID: 427960942675595401, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 427960942675595401, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 821062297229747713, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
       propertyPath: m_Name
       value: DecoderOutputFrameRateText
+      objectReference: {fileID: 0}
+    - target: {fileID: 898367330139714519, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 898367330139714519, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 1070415362155126362, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
@@ -1289,10 +1310,30 @@ PrefabInstance:
       propertyPath: m_Name
       value: ReceiverBitrateText
       objectReference: {fileID: 0}
+    - target: {fileID: 1456932621188534084, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1456932621188534084, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 1719259783216078698, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
       propertyPath: m_Name
       value: UidText
+      objectReference: {fileID: 0}
+    - target: {fileID: 1735468006171185563, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1735468006171185563, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 2593451092038417196, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
@@ -1314,10 +1355,40 @@ PrefabInstance:
       propertyPath: m_Name
       value: WidthText
       objectReference: {fileID: 0}
+    - target: {fileID: 4215351457170633192, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4215351457170633192, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4892111586398001733, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
       propertyPath: m_Name
       value: FrozenRateText
+      objectReference: {fileID: 0}
+    - target: {fileID: 4937587126700186579, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4937587126700186579, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5015336787325875011, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5015336787325875011, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 5731455138612916874, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
@@ -1424,6 +1495,16 @@ PrefabInstance:
       propertyPath: m_Pivot.y
       value: 0.5
       objectReference: {fileID: 0}
+    - target: {fileID: 5749022656361986285, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5749022656361986285, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 6634809400055523645, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
       propertyPath: m_Name
@@ -1433,6 +1514,26 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: FallbackText
+      objectReference: {fileID: 0}
+    - target: {fileID: 6873618091200432612, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6873618091200432612, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 7605322748250949631, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7605322748250949631, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 7940580394018926801, guid: 4e874ad0af4ac4bee855ba037b0539b1,
         type: 3}
@@ -1448,6 +1549,36 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: FrozenTimeText
+      objectReference: {fileID: 0}
+    - target: {fileID: 8187362769869219430, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8187362769869219430, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 8419615741016412307, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8419615741016412307, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 9050278035760998527, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_HorizontalOverflow
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9050278035760998527, guid: 4e874ad0af4ac4bee855ba037b0539b1,
+        type: 3}
+      propertyPath: m_FontData.m_Alignment
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4e874ad0af4ac4bee855ba037b0539b1, type: 3}
