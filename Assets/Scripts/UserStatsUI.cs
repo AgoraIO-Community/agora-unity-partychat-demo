@@ -17,11 +17,11 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Text delayText;
     [SerializeField] private Text widthText;
     [SerializeField] private Text heightText;
-    [SerializeField] private Text receiverBitrateText;
+    [SerializeField] private Text receivedBitrateText;
     [SerializeField] private Text packetLossRateText;
     [SerializeField] private Text activeTimeText;
     [SerializeField] private Text frozenTimeText;
-    [SerializeField] private Text frameRateText;
+    [SerializeField] private Text frozenRateText;
     [SerializeField] private Text decoderOutputFrameRateText;
     [SerializeField] private Text rendererOutputFramerateText;
     [SerializeField] private Text rxStreamTypeText;
@@ -61,9 +61,6 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
-        
-
-
         if(gameObject.name == remoteVideoStats.uid.ToString())
         {
             uidText.text = "Uid: " + remoteVideoStats.uid;
@@ -71,31 +68,14 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
             delayText.text = "Delay: " + remoteVideoStats.delay;
             widthText.text = "Width: " + remoteVideoStats.width;
             heightText.text = "Height: " + remoteVideoStats.height;
-            //[SerializeField] private Text receiverBitrateText;
-            //[SerializeField] private Text packetLossRateText;
-            //[SerializeField] private Text activeTimeText;
-            //[SerializeField] private Text frozenTimeText;
-            //[SerializeField] private Text frameRateText;
-            //[SerializeField] private Text decoderOutputFrameRateText;
-            //[SerializeField] private Text rendererOutputFramerateText;
-            //[SerializeField] private Text rxStreamTypeText;
+            receivedBitrateText.text = "Received bit rate: " + remoteVideoStats.receivedBitrate;
+            packetLossRateText.text = "Packet loss rate: " + remoteVideoStats.packetLossRate;
+            activeTimeText.text = "Total active time: " + remoteVideoStats.totalActiveTime;
+            frozenTimeText.text = "Total frozen time: " + remoteVideoStats.totalFrozenTime;
+            frozenRateText.text = "Frame rate: " + remoteVideoStats.frozenRate;
+            decoderOutputFrameRateText.text = "Decoder output frame rate: " + remoteVideoStats.decoderOutputFrameRate;
+            rendererOutputFramerateText.text = "Renderer output frame rate: " + remoteVideoStats.rendererOutputFrameRate;
+            rxStreamTypeText.text = "Stream type: " + remoteVideoStats.rxStreamType;
         }
-
-
-
-        // grab user UID + stats and output to stat window
-
-
-        //print("remote UID: " + remoteVideoStats.uid);
-
-        //print("remote video stats: " + remoteVideoStats.receivedBitrate);
-        //print("remote video stats: " + remoteVideoStats.rxStreamType);
-
-
-        //if (photonView.isMine)
-        //{
-        //    audienceVideoStats = remoteVideoStats;
-        //    UpdateCallStatsUI();
-        //}
     }
 }
