@@ -100,6 +100,11 @@ public class InCallStats : Photon.PunBehaviour
 
     void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
     {
+        //print(localVideoStats);
+        
+        //print("local video stats: " + localVideoStats.sentBitrate);
+        //print("local video stats: " + localVideoStats.ToString());
+
         if (photonView.isMine)
         {
             broadcasterVideoStats = localVideoStats;
@@ -118,6 +123,15 @@ public class InCallStats : Photon.PunBehaviour
 
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
+        // grab user UID + stats and output to stat window
+
+
+        //print("remote UID: " + remoteVideoStats.uid);
+
+        //print("remote video stats: " + remoteVideoStats.receivedBitrate);
+        //print("remote video stats: " + remoteVideoStats.rxStreamType);
+
+
         if (photonView.isMine)
         {
             audienceVideoStats = remoteVideoStats;
@@ -190,6 +204,7 @@ public class InCallStats : Photon.PunBehaviour
     {
         if (isBroadcaster)
         {
+            // LOCAL USER STATS
             callStatsText.text =
             "Agora Broadcaster Stats" +
             "\ntarget bitrate: " + broadcasterVideoStats.targetBitrate +
@@ -208,6 +223,7 @@ public class InCallStats : Photon.PunBehaviour
         }
         else
         {
+            // ALL REMOTE USER STATS
             callStatsText.text =
             "Agora Audience Stats" +
             "\nuid: " + audienceVideoStats.uid +

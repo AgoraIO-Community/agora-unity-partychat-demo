@@ -18,7 +18,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     [SerializeField]
     private string channel = "unity3d";
     private string originalChannel;
-    private IRtcEngine mRtcEngine;
+    public static IRtcEngine mRtcEngine;
+    [SerializeField]
     private uint myUID = 0;
     CLIENT_ROLE_TYPE myClientRole;
 
@@ -204,7 +205,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         Vector3 spawnPosition = new Vector3(0, -spawnY, 0);
 
         // Create Gameobject that will serve as our VideoSurface.
-        GameObject newUserVideo = Instantiate(userVideoPrefab, spawnPosition, spawnPoint.rotation);
+        GameObject newUserVideo = Instantiate(userVideoPrefab, spawnPosition, Quaternion.identity);
+        //newUserVideo.transform.rotation = Quaternion.Euler(imageRotation);
         if (newUserVideo == null)
         {
             Debug.LogError("CreateUserVideoSurface() - newUserVideoIsNull");
@@ -212,7 +214,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         }
         newUserVideo.name = uid.ToString();
         newUserVideo.transform.SetParent(spawnPoint, false);
-        newUserVideo.transform.rotation = Quaternion.Euler(Vector3.right * -180);
+        
+        Vector3 imageRotation = new Vector3(0, 0, 180f);
+        newUserVideo.transform.rotation = Quaternion.Euler(imageRotation);
 
         playerVideoList.Add(newUserVideo);
 
