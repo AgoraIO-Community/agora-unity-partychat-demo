@@ -33,17 +33,35 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
+    }
 
-        AgoraVideoChat.mRtcEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
-        AgoraVideoChat.mRtcEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
-        AgoraVideoChat.mRtcEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
-        AgoraVideoChat.mRtcEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
+    void OnEnable()
+    {
+        if (isLocalVideo)
+        {
+            AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
+        }
+        else
+        {
+            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (isLocalVideo)
+        {
+            AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
+        }
+        else
+        {
+            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+        }
     }
 
     public void SetIsLocal(bool isLocal)
     {
         isLocalVideo = isLocal;
-        print("setting " + gameObject.name + " isLocal to " + isLocal);
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -56,12 +74,6 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         {
             statsPanel.SetActive(true);
         }
-    }
-
-    void OnLocalPublishFallbackToAudioOnlyCallback(bool isFallbackOrRecover)
-    {
-        print("Local publish fallback - is falling back to audio only: " + isFallbackOrRecover);
-        fallbackToAudioOnly = isFallbackOrRecover;
     }
 
     void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
@@ -84,19 +96,12 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    void OnRemoteSubscribeFallbackToAudioOnlyCallback(uint uid, bool isFallbackOrRecover)
-    {
-        if(uid.ToString() == gameObject.name)
-        {
-            print("Remote subscribe fallback - UID of remote user: " + uid + " - is falling back to audio only: " + isFallbackOrRecover);
-            fallbackToAudioOnly = isFallbackOrRecover;
-        }
-    }
-
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
-        if(gameObject.name == remoteVideoStats.uid.ToString())
+        if (gameObject.name == remoteVideoStats.uid.ToString())
         {
+            print(gameObject.name + " remote video callback");
+
             uidText.text = "Uid: " + remoteVideoStats.uid;
             fallbackText.text = "Fallback to audio only: " + fallbackToAudioOnly;
             delayText.text = "Delay: " + remoteVideoStats.delay;
