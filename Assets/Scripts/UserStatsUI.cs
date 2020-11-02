@@ -33,10 +33,7 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
-    }
 
-    void OnEnable()
-    {
         if (isLocalVideo)
         {
             AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
@@ -47,17 +44,29 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         }
     }
 
-    void OnDisable()
-    {
-        if (isLocalVideo)
-        {
-            AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
-        }
-        else
-        {
-            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
-        }
-    }
+    //void OnEnable()
+    //{
+    //    if (isLocalVideo)
+    //    {
+    //        AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
+    //    }
+    //    else
+    //    {
+    //        AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+    //    }
+    //}
+
+    //void OnDisable()
+    //{
+    //    if (isLocalVideo)
+    //    {
+    //        AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
+    //    }
+    //    else
+    //    {
+    //        AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+    //    }
+    //}
 
     public void SetIsLocal(bool isLocal)
     {

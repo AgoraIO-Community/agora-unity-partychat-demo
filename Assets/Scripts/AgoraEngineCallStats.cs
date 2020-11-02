@@ -66,6 +66,6 @@ public class AgoraEngineCallStats : MonoBehaviour
     {
         //print("remote uid: " + remoteVideoStats.uid);
 
-        UpdateRemoteVideoStats(remoteVideoStats);
+        //UpdateRemoteVideoStats(remoteVideoStats);
     }
 }
