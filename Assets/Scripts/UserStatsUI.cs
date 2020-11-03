@@ -34,18 +34,6 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
 
-        //if (isLocalVideo)
-        //{
-        //    AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
-        //}
-        //else
-        //{
-        //    AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
-        //}
-    }
-
-    void OnEnable()
-    {
         if (isLocalVideo)
         {
             print("enable local video");
