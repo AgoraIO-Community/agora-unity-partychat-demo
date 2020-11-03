@@ -19,12 +19,6 @@ public class InCallStats : Photon.PunBehaviour
     private GameObject BroadCastSelectionPanel;
     [SerializeField]
     private GameObject PartyUIContainer;
-    [SerializeField]
-    private GameObject CallStatsPanel;
-    [SerializeField]
-    private Text callStatsText;
-    [SerializeField]
-    private GameObject ToggleStatsButton;
 
     [Header("Broadcaster")]
     [SerializeField]
@@ -42,8 +36,6 @@ public class InCallStats : Photon.PunBehaviour
 
             BroadCastSelectionPanel.SetActive(false);
             PartyUIContainer.SetActive(false);
-            CallStatsPanel.SetActive(false);
-            ToggleStatsButton.SetActive(false);
 
             agoraScript = GetComponent<AgoraVideoChat>();
             StartCoroutine(AgoraEngineSetup());
@@ -74,7 +66,6 @@ public class InCallStats : Photon.PunBehaviour
             }
 
             agoraEngine.SetChannelProfile(CHANNEL_PROFILE.CHANNEL_PROFILE_LIVE_BROADCASTING);
-            InitializeCallbacks();
             BroadCastSelectionPanel.SetActive(true);
         }
     }
@@ -87,64 +78,6 @@ public class InCallStats : Photon.PunBehaviour
 
             TurnVikingGold();
         }
-    }
-
-    void OnLocalPublishFallbackToAudioOnlyCallback(bool isFallbackOrRecover)
-    {
-        if(photonView.isMine)
-        {
-            print("Local publish fallback - is falling back to audio only: " + isFallbackOrRecover);
-            fallbackToAudioOnly = isFallbackOrRecover;
-        }
-    }
-
-    void OnLocalVideoStatsCallback(LocalVideoStats localVideoStats)
-    {
-        //print(localVideoStats);
-        
-        //print("local video stats: " + localVideoStats.sentBitrate);
-        //print("local video stats: " + localVideoStats.ToString());
-
-        if (photonView.isMine)
-        {
-            broadcasterVideoStats = localVideoStats;
-            UpdateCallStatsUI();
-        }
-    }
-
-    void OnRemoteSubscribeFallbackToAudioOnlyCallback(uint uid, bool isFallbackOrRecover)
-    {
-        if(photonView.isMine)
-        {
-            print("Remote subscribe fallback - UID of remote user: " + uid + " - is falling back to audio only: " + isFallbackOrRecover);
-            fallbackToAudioOnly = isFallbackOrRecover;
-        }
-    }
-
-    void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
-    {
-        // grab user UID + stats and output to stat window
-
-
-        //print("remote UID: " + remoteVideoStats.uid);
-
-        //print("remote video stats: " + remoteVideoStats.receivedBitrate);
-        //print("remote video stats: " + remoteVideoStats.rxStreamType);
-
-
-        if (photonView.isMine)
-        {
-            audienceVideoStats = remoteVideoStats;
-            UpdateCallStatsUI();
-        }
-    }
-
-    void InitializeCallbacks()
-    {
-        agoraEngine.OnLocalPublishFallbackToAudioOnly = OnLocalPublishFallbackToAudioOnlyCallback;
-        agoraEngine.OnLocalVideoStats = OnLocalVideoStatsCallback;
-        agoraEngine.OnRemoteSubscribeFallbackToAudioOnly = OnRemoteSubscribeFallbackToAudioOnlyCallback;
-        agoraEngine.OnRemoteVideoStats = OnRemoteVideoStatsCallback;
     }
 
     public void TurnVikingGold()
@@ -182,63 +115,8 @@ public class InCallStats : Photon.PunBehaviour
 
             PartyUIContainer.SetActive(true);
             BroadCastSelectionPanel.SetActive(false);
-            ToggleStatsButton.SetActive(true);
             
             agoraScript.JoinChannel();
-        }
-    }
-
-    public void ButtonToggleAgoraStreamStats()
-    {
-        if(CallStatsPanel.activeInHierarchy)
-        {
-            CallStatsPanel.SetActive(false);
-        }
-        else
-        {
-            CallStatsPanel.SetActive(true);
-        }
-    }
-
-    void UpdateCallStatsUI()
-    {
-        if (isBroadcaster)
-        {
-            // LOCAL USER STATS
-            callStatsText.text =
-            "Agora Broadcaster Stats" +
-            "\ntarget bitrate: " + broadcasterVideoStats.targetBitrate +
-            "\nsent bitrate: " + broadcasterVideoStats.sentBitrate +
-            "\ntarget framerate: " + broadcasterVideoStats.targetFrameRate +
-            "\nsent framerate: " + broadcasterVideoStats.sentFrameRate +
-            "\nencoder output framerate: " + broadcasterVideoStats.encoderOutputFrameRate +
-            "\nrenderer output framerate: " + broadcasterVideoStats.rendererOutputFrameRate +
-            "\nencoded bitrate: " + broadcasterVideoStats.encodedBitrate +
-            "\nencoded frame count: " + broadcasterVideoStats.encodedFrameCount +
-            "\nencoded frame width: " + broadcasterVideoStats.encodedFrameWidth +
-            "\nencoded frame height: " + broadcasterVideoStats.encodedFrameHeight +
-            "\nquality adapt indication: " + broadcasterVideoStats.qualityAdaptIndication +
-            "\ncodec type: " + broadcasterVideoStats.codecType +
-            "\nfallback to audio only: " + fallbackToAudioOnly;
-        }
-        else
-        {
-            // ALL REMOTE USER STATS
-            callStatsText.text =
-            "Agora Audience Stats" +
-            "\nuid: " + audienceVideoStats.uid +
-            "\ndelay: " + audienceVideoStats.delay +
-            "\nwidth: " + audienceVideoStats.width +
-            "\nheight: " + audienceVideoStats.height +
-            "\nreceived bitrate: " + audienceVideoStats.receivedBitrate +
-            "\ndecoder output framerate: " + audienceVideoStats.decoderOutputFrameRate +
-            "\nrenderer output framerate: " + audienceVideoStats.rendererOutputFrameRate +
-            "\npacket loss rate: " + audienceVideoStats.packetLossRate +
-            "\ntotal active time: " + audienceVideoStats.totalActiveTime +
-            "\ntotal frozen time: " + audienceVideoStats.totalFrozenTime +
-            "\nfrozen rate: " + audienceVideoStats.frozenRate +
-            "\nrx stream type: " + audienceVideoStats.rxStreamType +
-            "\nfallback to audio only: " + fallbackToAudioOnly;
         }
     }
 }
