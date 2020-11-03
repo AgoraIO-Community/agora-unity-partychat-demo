@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using agora_gaming_rtc;
@@ -15,17 +13,18 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
     [Header("Stuff")]
     [SerializeField] private Text uidText;
     [SerializeField] private Text fallbackText;
-    [SerializeField] private Text delayText;
-    [SerializeField] private Text widthText;
-    [SerializeField] private Text heightText;
-    [SerializeField] private Text receivedBitrateText;
-    [SerializeField] private Text packetLossRateText;
-    [SerializeField] private Text activeTimeText;
-    [SerializeField] private Text frozenTimeText;
-    [SerializeField] private Text frozenRateText;
-    [SerializeField] private Text decoderOutputFrameRateText;
-    [SerializeField] private Text rendererOutputFramerateText;
-    [SerializeField] private Text rxStreamTypeText;
+    [SerializeField] private Text text1;
+    [SerializeField] private Text text2;
+    [SerializeField] private Text text3;
+    [SerializeField] private Text text4;
+    [SerializeField] private Text text5;
+    [SerializeField] private Text text6;
+    [SerializeField] private Text text7;
+    [SerializeField] private Text text8;
+    [SerializeField] private Text text9;
+    [SerializeField] private Text text10;
+    [SerializeField] private Text text11;
+    [SerializeField] private Text text12;
 
     void Start()
     {
@@ -34,30 +33,30 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
 
-        if (AgoraVideoChat.mRtcEngine != null)
+        if (AgoraEngine.mRtcEngine != null)
         {
             if (isLocalVideo)
             {
-                AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
+                AgoraEngine.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
             }
             else
             {
-                AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+                AgoraEngine.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
             }
         }
     }
 
     void OnDisable()
     {
-        if(AgoraVideoChat.mRtcEngine != null)
+        if(AgoraEngine.mRtcEngine != null)
         {
             if (isLocalVideo)
             {
-                AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
+                AgoraEngine.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
             }
             else
             {
-                AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+                AgoraEngine.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
             }
         }
     }
@@ -83,19 +82,23 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
     {
         if(isLocalVideo)
         {
-            uidText.text = "uid: " + gameObject.name;
+            uidText.text = "UID: " + gameObject.name;
             fallbackText.text = "Fallback to audio only: " + fallbackToAudioOnly;
-            delayText.text = "Eframe ct: " + localVideoStats.encodedFrameCount;
-            widthText.text = "Eframe height: " + localVideoStats.encodedFrameHeight;
-            heightText.text = "Eframe width: " + localVideoStats.encodedFrameWidth;
-            receivedBitrateText.text = "Sent frame rate: " + localVideoStats.sentFrameRate;
-            packetLossRateText.text = "Target frame rate: " + localVideoStats.targetFrameRate;
-            activeTimeText.text = "Enc bit rate: " + localVideoStats.encodedBitrate;
-            frozenTimeText.text = "Sent bitrate: " + localVideoStats.sentBitrate;
-            frozenRateText.text = "Target bitrate: " + localVideoStats.targetBitrate;
-            decoderOutputFrameRateText.text = "Quality adapt: " + localVideoStats.qualityAdaptIndication;
-            rendererOutputFramerateText.text = "";
-            rxStreamTypeText.text = "Codec type: " + localVideoStats.codecType;
+
+            text1.text = "Sent frame rate: " + localVideoStats.sentFrameRate;
+            text2.text = "Target frame rate: " + localVideoStats.targetFrameRate;
+            text3.text = "Enc output frm rate: " + localVideoStats.encoderOutputFrameRate;
+
+            text4.text = "Eframe countt: " + localVideoStats.encodedFrameCount;
+            text5.text = "Eframe height: " + localVideoStats.encodedFrameHeight;
+            text6.text = "Eframe width: " + localVideoStats.encodedFrameWidth;
+
+            text7.text = "Enc bitrate: " + localVideoStats.encodedBitrate;
+            text8.text = "Sent bitrate: " + localVideoStats.sentBitrate;
+            text9.text = "Target bitrate: " + localVideoStats.targetBitrate;
+
+            text10.text = "Quality adapt indication: " + localVideoStats.qualityAdaptIndication;
+            text12.text = "Codec type: " + localVideoStats.codecType;
         }
     }
 
@@ -103,19 +106,24 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
     {
         if (gameObject.name == remoteVideoStats.uid.ToString())
         {
-            uidText.text = "Uid: " + remoteVideoStats.uid;
+            uidText.text = "UID: " + remoteVideoStats.uid;
             fallbackText.text = "Fallback to audio only: " + fallbackToAudioOnly;
-            delayText.text = "Delay: " + remoteVideoStats.delay;
-            widthText.text = "Width: " + remoteVideoStats.width;
-            heightText.text = "Height: " + remoteVideoStats.height;
-            receivedBitrateText.text = "Received bit rate: " + remoteVideoStats.receivedBitrate;
-            packetLossRateText.text = "Packet loss rate: " + remoteVideoStats.packetLossRate;
-            activeTimeText.text = "Total active time: " + remoteVideoStats.totalActiveTime;
-            frozenTimeText.text = "Total frozen time: " + remoteVideoStats.totalFrozenTime;
-            frozenRateText.text = "Frame rate: " + remoteVideoStats.frozenRate;
-            decoderOutputFrameRateText.text = "Decoder output frame rate: " + remoteVideoStats.decoderOutputFrameRate;
-            rendererOutputFramerateText.text = "Renderer output frame rate: " + remoteVideoStats.rendererOutputFrameRate;
-            rxStreamTypeText.text = "Stream type: " + remoteVideoStats.rxStreamType;
+
+            text1.text = "Width: " + remoteVideoStats.width;
+            text2.text = "Height: " + remoteVideoStats.height;
+            text3.text = "Delay: " + remoteVideoStats.delay;
+
+            text4.text = "Total active time: " + remoteVideoStats.totalActiveTime;
+            text5.text = "Total frozen time: " + remoteVideoStats.totalFrozenTime;
+            text6.text = "Frozen rate: " + remoteVideoStats.frozenRate;
+
+            text7.text = "Received bitrate: " + remoteVideoStats.receivedBitrate;
+            text8.text = "Packet loss rate: " + remoteVideoStats.packetLossRate;
+
+            text10.text = "Renderer output frame rate: " + remoteVideoStats.rendererOutputFrameRate;
+            text11.text = "Decoder output frame rate: " + remoteVideoStats.decoderOutputFrameRate;
+
+            text12.text = "Stream type: " + remoteVideoStats.rxStreamType;
         }
     }
 }

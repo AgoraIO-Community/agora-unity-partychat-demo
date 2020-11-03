@@ -14,11 +14,8 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 {
     [Header("Agora Properties")]
     [SerializeField]
-    private string appID = "57481146914f4cddaa220d6f7a045063";
-    [SerializeField]
     private string channel = "unity3d";
     private string originalChannel;
-    public static IRtcEngine mRtcEngine;
     [SerializeField]
     private uint myUID = 0;
     CLIENT_ROLE_TYPE myClientRole;
@@ -39,68 +36,39 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 
     void Start()
     {
-        if (!photonView.isMine)
+        if (photonView.isMine)
         {
-            return;
+            playerVideoList = new List<GameObject>();
+            originalChannel = channel;
+
+            AgoraEngine.mRtcEngine.OnJoinChannelSuccess = OnJoinChannelSuccessHandler;
+            AgoraEngine.mRtcEngine.OnUserJoined = OnUserJoinedHandler;
+            AgoraEngine.mRtcEngine.OnLeaveChannel = OnLeaveChannelHandler;
+            AgoraEngine.mRtcEngine.OnUserOffline = OnUserOfflineHandler;
+            AgoraEngine.mRtcEngine.OnClientRoleChanged = OnClientRoleChangedHandler;
         }
-            
-        playerVideoList = new List<GameObject>();
-
-        // Setup Agora Engine and Callbacks.
-        if(mRtcEngine != null)
-        {
-            IRtcEngine.Destroy();
-        }
-
-        originalChannel = channel;
-
-        // -- These are all necessary steps to initialize the Agora engine -- //
-        // Initialize Agora engine
-        mRtcEngine = IRtcEngine.GetEngine(appID);
-
-        // Setup square video profile
-        VideoEncoderConfiguration config = new VideoEncoderConfiguration();
-        config.dimensions.width = 480;
-        config.dimensions.height = 480;
-        config.frameRate = FRAME_RATE.FRAME_RATE_FPS_15;
-        config.bitrate = 800;
-        config.degradationPreference = DEGRADATION_PREFERENCE.MAINTAIN_QUALITY;
-        mRtcEngine.SetVideoEncoderConfiguration(config);
-
-        // Setup our callbacks (there are many other Agora callbacks, however these are the calls we need).
-        mRtcEngine.OnJoinChannelSuccess = OnJoinChannelSuccessHandler;
-        mRtcEngine.OnUserJoined = OnUserJoinedHandler;
-        mRtcEngine.OnLeaveChannel = OnLeaveChannelHandler;
-        mRtcEngine.OnUserOffline = OnUserOfflineHandler;
-        mRtcEngine.OnClientRoleChanged = OnClientRoleChangedHandler;
-
-        // Your video feed will not render if EnableVideo() isn't called. 
-        mRtcEngine.EnableVideo();
-        mRtcEngine.EnableVideoObserver();
     }
 
     public void JoinChannel()
     {
         // By setting our UID to "0" the Agora Engine creates a new one and assigns it. 
-        mRtcEngine.JoinChannel(channel, null, 0);
+        AgoraEngine.mRtcEngine.JoinChannel(channel, null, 0);
     }
 
     public string GetCurrentChannel() => channel;
-
-    public IRtcEngine GetAgoraEngine() => mRtcEngine;
 
     public void JoinRemoteChannel(string remoteChannelName)
     {
         if (!photonView.isMine)
         {
             return;
-        } 
+        }
 
-        mRtcEngine.LeaveChannel();
+        AgoraEngine.mRtcEngine.LeaveChannel();
 
-        mRtcEngine.JoinChannel(remoteChannelName, null, myUID);
-        mRtcEngine.EnableVideo();
-        mRtcEngine.EnableVideoObserver();
+        AgoraEngine.mRtcEngine.JoinChannel(remoteChannelName, null, myUID);
+        AgoraEngine.mRtcEngine.EnableVideo();
+        AgoraEngine.mRtcEngine.EnableVideoObserver();
 
         channel = remoteChannelName;
     }
@@ -215,7 +183,6 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         newUserVideo.name = uid.ToString();
         newUserVideo.transform.SetParent(spawnPoint, false);
         
-        
         Vector3 imageRotation = new Vector3(0, 0, 180f);
         newUserVideo.transform.rotation = Quaternion.Euler(imageRotation);
 
@@ -288,28 +255,12 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         }
     }
 
-    private void TerminateAgoraEngine()
-    {
-        if (mRtcEngine != null)
-        {
-            mRtcEngine.LeaveChannel();
-            mRtcEngine = null;
-            IRtcEngine.Destroy();
-        }
-    }
-
     private IEnumerator OnLeftRoom()
     {
         //Wait untill Photon is properly disconnected (empty room, and connected back to main server)
         while (PhotonNetwork.room != null || PhotonNetwork.connected == false)
             yield return 0;
 
-        TerminateAgoraEngine();
-    }
-
-    // Cleaning up the Agora engine during OnApplicationQuit() is an essential part of the Agora process with Unity. 
-    private void OnApplicationQuit()
-    {
-        TerminateAgoraEngine();
+        IRtcEngine.Destroy();
     }
 }

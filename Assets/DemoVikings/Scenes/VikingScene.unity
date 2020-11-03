@@ -1010,7 +1010,7 @@ GameObject:
   - component: {fileID: 1765620564}
   - component: {fileID: 1765620563}
   m_Layer: 0
-  m_Name: AgoraEngineCallStats
+  m_Name: AgoraEngine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1028,6 +1028,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cddf3111c661e4a129fd1b68695688d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  appID: 57481146914f4cddaa220d6f7a045063
 --- !u!4 &1765620564
 Transform:
   m_ObjectHideFlags: 0

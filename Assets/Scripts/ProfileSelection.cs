@@ -1,18 +1,12 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using agora_gaming_rtc;
 
-public class InCallStats : Photon.PunBehaviour
+public class ProfileSelection : Photon.PunBehaviour
 {
     private bool isBroadcaster;
-    private bool fallbackToAudioOnly;
     private AgoraVideoChat agoraScript;
     private IRtcEngine agoraEngine;
-
-    private LocalVideoStats broadcasterVideoStats;
-    private RemoteVideoStats audienceVideoStats;
 
     [Header("UI Elements")]
     [SerializeField]
@@ -32,7 +26,6 @@ public class InCallStats : Photon.PunBehaviour
         {
             agoraEngine = null;
             isBroadcaster = false;
-            fallbackToAudioOnly = false;
 
             BroadCastSelectionPanel.SetActive(false);
             PartyUIContainer.SetActive(false);
@@ -46,14 +39,14 @@ public class InCallStats : Photon.PunBehaviour
     {
         if (photonView.isMine)
         {
-            agoraEngine = agoraScript.GetAgoraEngine();
+            agoraEngine = AgoraEngine.mRtcEngine;
             float engineTimer = 0f;
             float engineTimeout = 3f;
 
 
             while (agoraEngine == null)
             {
-                agoraEngine = agoraScript.GetAgoraEngine();
+                agoraEngine = AgoraEngine.mRtcEngine;
                 engineTimer += Time.deltaTime;
 
                 if (engineTimer >= engineTimeout)

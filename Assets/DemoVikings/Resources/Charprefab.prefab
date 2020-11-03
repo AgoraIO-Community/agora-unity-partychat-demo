@@ -272,9 +272,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BroadCastSelectionPanel: {fileID: 806753561509800047}
   PartyUIContainer: {fileID: 6441939414617071632}
-  CallStatsPanel: {fileID: 0}
-  callStatsText: {fileID: 0}
-  ToggleStatsButton: {fileID: 0}
   broadcasterMaterial: {fileID: 2100000, guid: f5c3f6f0bb6ad480498d3c58b50251fc, type: 2}
   vikingMesh: {fileID: 13700000}
 --- !u!1 &100008
@@ -1583,7 +1580,7 @@ GameObject:
   - component: {fileID: 4129340225304664562}
   - component: {fileID: 3248629771451594804}
   m_Layer: 0
-  m_Name: AudienceSelectionButton (1)
+  m_Name: AudienceSelectionButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
