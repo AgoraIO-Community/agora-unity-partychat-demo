@@ -34,27 +34,31 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
 
-        if (isLocalVideo)
+        if (AgoraVideoChat.mRtcEngine != null)
         {
-            print("enable local video");
-            AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
-        }
-        else
-        {
-            print("enable remote video");
-            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+            if (isLocalVideo)
+            {
+                AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
+            }
+            else
+            {
+                AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+            }
         }
     }
 
     void OnDisable()
     {
-        if (isLocalVideo)
+        if(AgoraVideoChat.mRtcEngine != null)
         {
-            AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
-        }
-        else
-        {
-            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+            if (isLocalVideo)
+            {
+                AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
+            }
+            else
+            {
+                AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+            }
         }
     }
 
@@ -97,13 +101,8 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
-
-
-
         if (gameObject.name == remoteVideoStats.uid.ToString())
         {
-            print(gameObject.name + " remote video callback");
-
             uidText.text = "Uid: " + remoteVideoStats.uid;
             fallbackText.text = "Fallback to audio only: " + fallbackToAudioOnly;
             delayText.text = "Delay: " + remoteVideoStats.delay;
