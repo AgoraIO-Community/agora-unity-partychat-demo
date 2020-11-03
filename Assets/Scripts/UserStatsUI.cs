@@ -34,39 +34,41 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
         statsPanel = transform.GetChild(0).gameObject;
         statsPanel.SetActive(false);
 
+        //if (isLocalVideo)
+        //{
+        //    AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
+        //}
+        //else
+        //{
+        //    AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
+        //}
+    }
+
+    void OnEnable()
+    {
         if (isLocalVideo)
         {
+            print("enable local video");
             AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
         }
         else
         {
+            print("enable remote video");
             AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
         }
     }
 
-    //void OnEnable()
-    //{
-    //    if (isLocalVideo)
-    //    {
-    //        AgoraVideoChat.mRtcEngine.OnLocalVideoStats += OnLocalVideoStatsCallback;
-    //    }
-    //    else
-    //    {
-    //        AgoraVideoChat.mRtcEngine.OnRemoteVideoStats += OnRemoteVideoStatsCallback;
-    //    }
-    //}
-
-    //void OnDisable()
-    //{
-    //    if (isLocalVideo)
-    //    {
-    //        AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
-    //    }
-    //    else
-    //    {
-    //        AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
-    //    }
-    //}
+    void OnDisable()
+    {
+        if (isLocalVideo)
+        {
+            AgoraVideoChat.mRtcEngine.OnLocalVideoStats -= OnLocalVideoStatsCallback;
+        }
+        else
+        {
+            AgoraVideoChat.mRtcEngine.OnRemoteVideoStats -= OnRemoteVideoStatsCallback;
+        }
+    }
 
     public void SetIsLocal(bool isLocal)
     {
@@ -107,6 +109,9 @@ public class UserStatsUI : MonoBehaviour, IPointerClickHandler
 
     void OnRemoteVideoStatsCallback(RemoteVideoStats remoteVideoStats)
     {
+
+
+
         if (gameObject.name == remoteVideoStats.uid.ToString())
         {
             print(gameObject.name + " remote video callback");
