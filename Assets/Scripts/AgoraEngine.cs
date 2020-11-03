@@ -5,7 +5,7 @@ public class AgoraEngine : MonoBehaviour
 {
     [Header("Agora Properties")]
     [SerializeField]
-    private string appID = "57481146914f4cddaa220d6f7a045063";
+    private string appID = "";
     public static IRtcEngine mRtcEngine;
 
     void Start()
