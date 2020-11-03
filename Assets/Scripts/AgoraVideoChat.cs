@@ -18,7 +18,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
 {
     [Header("Agora Properties")]
     [SerializeField]
-    private string appID = "57481146914f4cddaa220d6f7a045063";
+    private string appID = "ADD YOUR APP ID HERE";
     [SerializeField]
     private string channel = "unity3d";
     private string originalChannel;
