@@ -22,5 +22,6 @@ Solo Player             |  Party Joined!
 ## Getting Started
 All main demo scenes using the viking example are inside Assets > DemoVikings > Scenes > VikingScene
 
-If a photon room hasn't been created, select the "GO" button next to the "Create Room: " option. You can leave the name the same when testing.
-If you already have a photon room created in another client, and would like to join and test, select the "GO" button next to "Join Room: ".
+1. If a photon room hasn't been created, select the "GO" button next to the "Create Room: " option. 
+2. You can leave the name the same when testing.
+3. If you already have a photon room created in another client, and would like to join and test, select the "GO" button next to "Join Room: ".
