@@ -1,5 +1,5 @@
 # agora-unity-partychat-demo
-Unity video party chat using Agora SDK and Photon. Refer to the [Medium post](https://medium.com/p/76769cdd200/edit) for project setup from scratch!
+Unity video party chat using Agora SDK for RTE chat and Photon for networked multiplayer scene. Refer to the [Medium post](https://medium.com/p/76769cdd200/edit) for project setup from scratch!
 
 
 ## Before You Start
