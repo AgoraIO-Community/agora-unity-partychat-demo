@@ -7,12 +7,13 @@ Get yourself up to speed on Agora SDK essentials with 4 different projects!
 ## Project List
 This demo is a portal to 4 different projects that can be accessed in the branches shown:
 
-1. [master:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/master) You'll learn the basics of connecting two or more players in a Unity game to the Agora RTE network inside a snowy viking demo!
+#### 1. [master:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/master)   Learn the basics of connecting two or more players in a Unity game to the Agora RTE network inside a snowy viking demo!
 
 - Walk up to a player to invite them to your party 
 - Accept the invite in the remote client
 - Connect with your fellow players in a scalable video chat UI powered by Agora!
-- Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by step guide from beginning to end.
+
+Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by step guide from beginning to end.
 
 Solo Player             |  Party Joined!
 :-------------------------:|:-------------------------:
