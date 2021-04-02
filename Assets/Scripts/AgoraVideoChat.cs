@@ -156,6 +156,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
             return;
         }
 
+        print("joined channel");
+
+
         myUID = uid;
 
         CreateUserVideoSurface(uid, true);

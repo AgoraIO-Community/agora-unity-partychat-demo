@@ -30,6 +30,5 @@ MonoBehaviour:
   RpcList:
   - InvitePlayerToPartyChannel
   - SendChatMessage
-  - UpdatePlayerUID
   - UpdateNetworkedPlayerUID
   DisableAutoOpenWizard: 1

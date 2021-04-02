@@ -193,8 +193,8 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 11400010}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 2
+  instantiationId: 2
   currentMasterID: -1
   isRuntimeInstantiated: 0
 --- !u!114 &11400010
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011cfb7e7b533474eaae30c0a0194149, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  appID: 57481146914f4cddaa220d6f7a045063
+  appID: 8ac5b43a061d49d6a57360ce4ae6e92b
   channel: unity3d
   myUID: 0
   userVideoPrefab: {fileID: 1272405541118282648, guid: 9c09429efb77d4336ab9650b8f03362e,
@@ -1516,8 +1516,8 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 0}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 3
+  instantiationId: 3
   currentMasterID: -1
   isRuntimeInstantiated: 0
 --- !u!1 &4024445271744060198
@@ -2392,8 +2392,8 @@ MonoBehaviour:
   ObservedComponents:
   - {fileID: 0}
   ObservedComponentsFoldoutOpen: 1
-  viewIdField: 0
-  instantiationId: -1
+  viewIdField: 4
+  instantiationId: 4
   currentMasterID: -1
   isRuntimeInstantiated: 0
 --- !u!1001 &4053207997825873647
