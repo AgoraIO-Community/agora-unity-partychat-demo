@@ -36,7 +36,7 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/spatial-audio.gif" width="550">
 
-*Note: All players join in the same channel in this demo*
+_Note: In this demo all players start in the same channel_
 ---
 
 ## Getting Started
