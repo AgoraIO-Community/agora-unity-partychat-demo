@@ -132,6 +132,8 @@ public class SpatialAudio : Photon.MonoBehaviour
                 float pan = GetPanByPlayerOrientation(players[i]);
 
                 agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], pan, gain);
+                print("pan: " + pan);
+                print("gain: " + gain);
             }
         }
     }
