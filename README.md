@@ -20,6 +20,7 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/party-chat-Joel.gif" width="350">    <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/party-chat-Rick.gif" width="350">
 
 2. [In-Call-Stats:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/In-Call-Stats) Displays the different stats and realtime data you can access when in an Agora channel.
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/in-call-stats.gif">
 
 3. [live-audio-broadcast:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/live-audio-broadcast) Showcases Agora's "broadcast" mode, where players to choose to either be a Broadcaster or Audience. 
 
