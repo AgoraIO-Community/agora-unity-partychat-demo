@@ -34,6 +34,9 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 4. [spatial-audio-demo:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/spatial-audio-demo) Showcases "spatial audio" feature where incoming player audio is adjusted based on proximity and orientation to player.
 
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/spatial-audio.gif" width="550">
+
+*Note: All players join in the same channel in this demo*
 ---
 
 ## Getting Started
