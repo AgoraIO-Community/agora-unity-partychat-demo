@@ -24,11 +24,19 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 2. [In-Call-Stats:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/In-Call-Stats) Displays the different stats and realtime data you can access when in an Agora channel.
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/in-call-stats.gif" width="550">
 
+- Unique stats for **Broadcaster** and **Audience** roles
+- See the stats for each unique role in a scalable UI for your use
+- Use these stats in your own project to add even more customization!
+
 ---
 
 3. [live-audio-broadcast:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/live-audio-broadcast) Showcases Agora's "broadcast" mode, where players to choose to either be a Broadcaster or Audience. 
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/broadcasting.gif" width="350">
+
+- Broadcasters are identified with **Gold** exterior
+- Using Agora callbacks, chat bubbles dynamically display when the user's microphone registers input
+- Build your own 3D hangout with Agora!
 
 ---
 
@@ -36,7 +44,12 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/spatial-audio.gif" width="550">
 
-_Note: In this demo all players start in the same channel_
+- Balance audio between Left and Right speaker channels based on the direction the audio is coming from
+- Smoothly adjust the volume up and down based on player distance
+- Custom UI to help you identify the values for a specific player
+
+**Note: In this demo all players start in the same channel**
+
 ---
 
 ## Getting Started
