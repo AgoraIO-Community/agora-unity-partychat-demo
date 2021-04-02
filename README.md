@@ -2,13 +2,19 @@
 <p align="center">
   <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/agora-logo.png" width="650" class="center">
 </p>
-
+<br>
 
 # Agora Unity Party Chat Demo
 
-Get yourself up to speed on Agora SDK essentials with 4 different projects!
+Get up to speed on Agora SDK essentials with 4 different projects!
+Each branch in this repo project is a link to a different example demo showcasing unique Agora features, as described below
+1. [master:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/master)
+2. [In-Call-Stats:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/In-Call-Stats)
+3. [live-audio-broadcast:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/live-audio-broadcast)
+4. [spatial-audio-demo:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/spatial-audio-demo)
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/branches-menu.gif" width="350">
+
 
 
 
