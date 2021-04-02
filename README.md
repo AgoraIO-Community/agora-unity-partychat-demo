@@ -28,7 +28,7 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 3. [live-audio-broadcast:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/live-audio-broadcast) Showcases Agora's "broadcast" mode, where players to choose to either be a Broadcaster or Audience. 
 
-![Broadcasters are displayed with gold skin](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/Live-Broadcasters.gif)
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/broadcasting.gif" width="350">
 
 ---
 
