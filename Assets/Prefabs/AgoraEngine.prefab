@@ -43,8 +43,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011cfb7e7b533474eaae30c0a0194149, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  appID: 57481146914f4cddaa220d6f7a045063
+  appID: 
   channel: unity3d1
   myUID: 0
-  currentUsers: 0
-  videoFrameOffset: {x: 0, y: 0, z: -5}
+  userVideoPrefab: {fileID: 0}
+  spawnPoint: {fileID: 0}
+  content: {fileID: 0}
+  spaceBetweenUserVideos: 150

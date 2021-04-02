@@ -13,6 +13,9 @@ public class SpatialAudio : Photon.MonoBehaviour
     [SerializeField]
     private List<uint> playerUIDs;
 
+    [SerializeField]
+    private SpatialAudioUITester spatialAudioUI;
+
     private IAudioEffectManager agoraAudioEffects;
     private SphereCollider agoraChatRadius;
     private AgoraVideoChat agoraScript;
@@ -134,13 +137,19 @@ public class SpatialAudio : Photon.MonoBehaviour
                 agoraAudioEffects.SetRemoteVoicePosition(playerUIDs[i], pan, gain);
                 print("pan: " + pan);
                 print("gain: " + gain);
+
+                // only display the spatial audio settings of one player
+                if(spatialAudioUI && i == 0)
+                {
+                    spatialAudioUI.UpdateSpatialAudioVisualizer(gain, pan);
+                }
             }
         }
     }
 
     float GetGainByPlayerDistance(float distanceToPlayer)
     {
-        // Get distance to player, and restrict the value to Min and Max values
+        // Get distance to pr , and restrict the value to Min and Max values
         distanceToPlayer = Mathf.Clamp(distanceToPlayer, MAX_CHAT_PROXIMITY, agoraChatRadius.radius);
 
         // Normalize the result between a value of 0f - 100f;

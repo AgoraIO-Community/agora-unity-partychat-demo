@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 011cfb7e7b533474eaae30c0a0194149, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  appID: 8ac5b43a061d49d6a57360ce4ae6e92b
+  appID: 
   channel: unity3d
   myUID: 0
   userVideoPrefab: {fileID: 1272405541118282648, guid: 9c09429efb77d4336ab9650b8f03362e,
@@ -273,6 +273,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   players: []
   playerUIDs: 
+  spatialAudioUI: {fileID: 826090708686858004}
 --- !u!1 &100008
 GameObject:
   m_ObjectHideFlags: 0
@@ -2641,3 +2642,15 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 4053207997825873647}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &826090708686858004 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3695553334722761211, guid: afafc00a080374cb6886249b6a22e685,
+    type: 3}
+  m_PrefabInstance: {fileID: 4053207997825873647}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d7918d66dc854edd812b46b9fe85f8d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
