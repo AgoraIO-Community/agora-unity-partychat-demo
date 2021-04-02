@@ -1,74 +1,200 @@
 fileFormatVersion: 2
 guid: 0d14c367beb62a44a9934d3eb9839555
 ModelImporter:
-  serializedVersion: 23
-  fileIDToRecycleName:
-    100000: Axe
-    100002: BaseHuman
-    100004: CATRigHub001
-    100006: CATRigHub002
-    100008: CATRigHub003
-    100010: CATRigLArm1
-    100012: CATRigLArm2
-    100014: CATRigLArmCollarbone
-    100016: CATRigLArmPalm
-    100018: CATRigLLeg1
-    100020: CATRigLLeg2
-    100022: CATRigLLegAnkle
-    100024: CATRigLLegPlatform
-    100026: CATRigRArm1
-    100028: CATRigRArm2
-    100030: CATRigRArmCollarbone
-    100032: CATRigRArmPalm
-    100034: CATRigRLeg1
-    100036: CATRigRLeg2
-    100038: CATRigRLegAnkle
-    100040: CATRigRLegPlatform
-    100042: CATRigSpine
-    100044: CATRigSpine2
-    100046: CATRigSpineCATRigSpine1
-    100048: Character001
-    100050: Shield
-    100052: //RootNode
-    400000: Axe
-    400002: BaseHuman
-    400004: CATRigHub001
-    400006: CATRigHub002
-    400008: CATRigHub003
-    400010: CATRigLArm1
-    400012: CATRigLArm2
-    400014: CATRigLArmCollarbone
-    400016: CATRigLArmPalm
-    400018: CATRigLLeg1
-    400020: CATRigLLeg2
-    400022: CATRigLLegAnkle
-    400024: CATRigLLegPlatform
-    400026: CATRigRArm1
-    400028: CATRigRArm2
-    400030: CATRigRArmCollarbone
-    400032: CATRigRArmPalm
-    400034: CATRigRLeg1
-    400036: CATRigRLeg2
-    400038: CATRigRLegAnkle
-    400040: CATRigRLegPlatform
-    400042: CATRigSpine
-    400044: CATRigSpine2
-    400046: CATRigSpineCATRigSpine1
-    400048: Character001
-    400050: Shield
-    400052: //RootNode
-    2300000: Axe
-    2300002: Shield
-    3300000: Axe
-    3300002: Shield
-    4300000: BaseHuman
-    4300002: Axe
-    4300004: Shield
-    11100000: //RootNode
-    13700000: BaseHuman
+  serializedVersion: 19301
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: Axe
+  - first:
+      1: 100002
+    second: BaseHuman
+  - first:
+      1: 100004
+    second: CATRigHub001
+  - first:
+      1: 100006
+    second: CATRigHub002
+  - first:
+      1: 100008
+    second: CATRigHub003
+  - first:
+      1: 100010
+    second: CATRigLArm1
+  - first:
+      1: 100012
+    second: CATRigLArm2
+  - first:
+      1: 100014
+    second: CATRigLArmCollarbone
+  - first:
+      1: 100016
+    second: CATRigLArmPalm
+  - first:
+      1: 100018
+    second: CATRigLLeg1
+  - first:
+      1: 100020
+    second: CATRigLLeg2
+  - first:
+      1: 100022
+    second: CATRigLLegAnkle
+  - first:
+      1: 100024
+    second: CATRigLLegPlatform
+  - first:
+      1: 100026
+    second: CATRigRArm1
+  - first:
+      1: 100028
+    second: CATRigRArm2
+  - first:
+      1: 100030
+    second: CATRigRArmCollarbone
+  - first:
+      1: 100032
+    second: CATRigRArmPalm
+  - first:
+      1: 100034
+    second: CATRigRLeg1
+  - first:
+      1: 100036
+    second: CATRigRLeg2
+  - first:
+      1: 100038
+    second: CATRigRLegAnkle
+  - first:
+      1: 100040
+    second: CATRigRLegPlatform
+  - first:
+      1: 100042
+    second: CATRigSpine
+  - first:
+      1: 100044
+    second: CATRigSpine2
+  - first:
+      1: 100046
+    second: CATRigSpineCATRigSpine1
+  - first:
+      1: 100048
+    second: Character001
+  - first:
+      1: 100050
+    second: Shield
+  - first:
+      1: 100052
+    second: //RootNode
+  - first:
+      4: 400000
+    second: Axe
+  - first:
+      4: 400002
+    second: BaseHuman
+  - first:
+      4: 400004
+    second: CATRigHub001
+  - first:
+      4: 400006
+    second: CATRigHub002
+  - first:
+      4: 400008
+    second: CATRigHub003
+  - first:
+      4: 400010
+    second: CATRigLArm1
+  - first:
+      4: 400012
+    second: CATRigLArm2
+  - first:
+      4: 400014
+    second: CATRigLArmCollarbone
+  - first:
+      4: 400016
+    second: CATRigLArmPalm
+  - first:
+      4: 400018
+    second: CATRigLLeg1
+  - first:
+      4: 400020
+    second: CATRigLLeg2
+  - first:
+      4: 400022
+    second: CATRigLLegAnkle
+  - first:
+      4: 400024
+    second: CATRigLLegPlatform
+  - first:
+      4: 400026
+    second: CATRigRArm1
+  - first:
+      4: 400028
+    second: CATRigRArm2
+  - first:
+      4: 400030
+    second: CATRigRArmCollarbone
+  - first:
+      4: 400032
+    second: CATRigRArmPalm
+  - first:
+      4: 400034
+    second: CATRigRLeg1
+  - first:
+      4: 400036
+    second: CATRigRLeg2
+  - first:
+      4: 400038
+    second: CATRigRLegAnkle
+  - first:
+      4: 400040
+    second: CATRigRLegPlatform
+  - first:
+      4: 400042
+    second: CATRigSpine
+  - first:
+      4: 400044
+    second: CATRigSpine2
+  - first:
+      4: 400046
+    second: CATRigSpineCATRigSpine1
+  - first:
+      4: 400048
+    second: Character001
+  - first:
+      4: 400050
+    second: Shield
+  - first:
+      4: 400052
+    second: //RootNode
+  - first:
+      23: 2300000
+    second: Axe
+  - first:
+      23: 2300002
+    second: Shield
+  - first:
+      33: 3300000
+    second: Axe
+  - first:
+      33: 3300002
+    second: Shield
+  - first:
+      43: 4300000
+    second: BaseHuman
+  - first:
+      43: 4300002
+    second: Axe
+  - first:
+      43: 4300004
+    second: Shield
+  - first:
+      111: 11100000
+    second: //RootNode
+  - first:
+      137: 13700000
+    second: BaseHuman
   externalObjects: {}
   materials:
-    importMaterials: 1
+    materialImportMode: 1
     materialName: 3
     materialSearch: 1
     materialLocation: 0
@@ -101,25 +227,28 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
     importVisibility: 0
     importBlendShapes: 1
     importCameras: 0
     importLights: 0
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
     preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    meshOptimizationFlags: -1
     indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
     secondaryUVPackMargin: 4
     useFileScale: 0
-    previousCalculatedGlobalScale: 1
-    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -128,10 +257,17 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
+  referencedClips:
+  - d774d93b50a320842b9a97a6c399f11f
+  - 3959c4793b5a47741b85d6de3f4aff5e
+  - 85127b674fe584941a535023f7a3dca0
+  - 16b52d3acfdf8a44980f0ec8a78f68bb
+  - 388d0efd3c755034d8ee46d405272e07
+  - d56e8146ee53a2246b028f3c3095679c
+  - a0984aae81a6f9d4294955fc25382391
   importAnimation: 1
-  copyAvatar: 0
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human: []
     skeleton: []
     armTwist: 0.5
@@ -141,13 +277,16 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
+    globalScale: 0.01
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 1
   humanoidOversampling: 1
+  avatarSetup: 0
   additionalBone: 0
   userData: 
   assetBundleName: 

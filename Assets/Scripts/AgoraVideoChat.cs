@@ -19,25 +19,19 @@ using agora_gaming_rtc;
 public class AgoraVideoChat : Photon.MonoBehaviour
 {
     [Header("Agora Properties")]
-    [SerializeField]
 
     // *** ADD YOUR APP ID HERE BEFORE GETTING STARTED *** //
-    private string appID = "ADD YOUR APP ID HERE";
-    [SerializeField]
-    private string channel = "unity3d";
+    [SerializeField] private string appID = "ADD YOUR APP ID HERE";
+    [SerializeField] private string channel = "unity3d";
     private string originalChannel;
     private IRtcEngine mRtcEngine;
     private uint myUID = 0;
 
     [Header("Player Video Panel Properties")]
-    [SerializeField]
-    private GameObject userVideoPrefab;
-    [SerializeField]
-    private Transform spawnPoint;
-    [SerializeField]
-    private RectTransform content;
-    [SerializeField]
-    private float spaceBetweenUserVideos = 150f;
+    [SerializeField] private GameObject userVideoPrefab;
+    [SerializeField] private Transform spawnPoint;
+    [SerializeField] private RectTransform content;
+    [SerializeField] private float spaceBetweenUserVideos = 150f;
     private List<GameObject> playerVideoList;
 
     public delegate void AgoraCustomEvent();
@@ -85,7 +79,7 @@ public class AgoraVideoChat : Photon.MonoBehaviour
         mRtcEngine.EnableVideo();
         mRtcEngine.EnableVideoObserver();
 
-        // By setting our UID to "0" the Agora Engine creates a new one and assigns it. 
+        // By setting our UID to "0" the Agora Engine creates a unique UID and returns it in the OnJoinChannelSuccess callback. 
         mRtcEngine.JoinChannel(channel, null, 0);
     }
 
@@ -140,7 +134,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnJoinChannelSuccessHandler(string channelName, uint uid, int elapsed)
     {
         if (!photonView.isMine)
+        {
             return;
+        }
 
         myUID = uid;
 
@@ -151,7 +147,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnUserJoinedHandler(uint uid, int elapsed)
     {
         if (!photonView.isMine)
+        {
             return;
+        }
 
         CreateUserVideoSurface(uid, false);
     }
@@ -160,7 +158,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnLeaveChannelHandler(RtcStats stats)
     {
         if (!photonView.isMine)
+        {
             return;
+        }
 
         foreach (GameObject player in playerVideoList)
         {
@@ -173,7 +173,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     private void OnUserOfflineHandler(uint uid, USER_OFFLINE_REASON reason)
     {
         if (!photonView.isMine)
+        {
             return;
+        }
 
         if (playerVideoList.Count <= 1)
         {
@@ -290,7 +292,9 @@ public class AgoraVideoChat : Photon.MonoBehaviour
     {
         //Wait untill Photon is properly disconnected (empty room, and connected back to main server)
         while (PhotonNetwork.room != null || PhotonNetwork.connected == false)
+        {
             yield return 0;
+        }
 
         TerminateAgoraEngine();
     }
