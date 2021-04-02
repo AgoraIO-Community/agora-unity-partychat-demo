@@ -1,6 +1,14 @@
+
+<p align="center">
+  <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/agora-logo.png" width="650" class="center">
+</p>
+
+
 # Agora Unity Party Chat Demo
 
 Get yourself up to speed on Agora SDK essentials with 4 different projects!
+
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/branches-menu.png" width="350">
 
 
 
