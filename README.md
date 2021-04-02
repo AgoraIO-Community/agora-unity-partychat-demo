@@ -30,15 +30,20 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 ## Getting Started
 All main demo scenes using the viking example are inside Assets > DemoVikings > Scenes > VikingScene
+
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/demo-location.gif">
 
 1. If a photon room hasn't been created, select the "GO" button next to the "Create Room: " option. 
+
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/network-lobby-1.gif">
 2. You can leave the name the same when testing.
 3. If you already have a photon room created in another client, and would like to join and test, select the "GO" button next to "Join Room: ".
 
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/network-lobby-2.gif">
 
-### Bounty Hunters Only...
-Current Open Bounties:
+
+### Bounty Board!
+Current Open Bounties...
 ```diff
 When upgrading to Unity 2020.3 (LTS)
 - Assets/DemoVikings/Editor/PropertyEditor.cs(233,134): error CS0426: The type name 'DrawCapFunction' does not exist in the type 'Handles'
