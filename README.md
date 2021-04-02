@@ -8,7 +8,7 @@
 
 Get yourself up to speed on Agora SDK essentials with 4 different projects!
 
-<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/branches-menu.png" width="350">
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/branches-menu.gif" width="350">
 
 
 
