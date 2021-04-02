@@ -19,15 +19,22 @@ Refer to this [Medium post](https://medium.com/p/76769cdd200/edit) for a step by
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/party-chat-Joel.gif" width="350">    <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/party-chat-Rick.gif" width="350">
 
+---
+
 2. [In-Call-Stats:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/In-Call-Stats) Displays the different stats and realtime data you can access when in an Agora channel.
-<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/in-call-stats.gif">
+<img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/in-call-stats.gif" width="550">
+
+---
 
 3. [live-audio-broadcast:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/live-audio-broadcast) Showcases Agora's "broadcast" mode, where players to choose to either be a Broadcaster or Audience. 
 
 ![Broadcasters are displayed with gold skin](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/Live-Broadcasters.gif)
 
-5. [spatial-audio-demo:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/spatial-audio-demo) Showcases "spatial audio" feature where incoming player audio is adjusted based on proximity and orientation to player.
+---
 
+4. [spatial-audio-demo:](https://github.com/AgoraIO-Community/agora-unity-partychat-demo/tree/spatial-audio-demo) Showcases "spatial audio" feature where incoming player audio is adjusted based on proximity and orientation to player.
+
+---
 
 ## Getting Started
 All main demo scenes using the viking example are inside Assets > DemoVikings > Scenes > VikingScene
@@ -43,6 +50,7 @@ All main demo scenes using the viking example are inside Assets > DemoVikings > 
 
 <img src="https://github.com/AgoraIO-Community/agora-unity-partychat-demo/blob/master/ReadMe/network-lobby-2.gif">
 
+---
 
 ### Bounty Board!
 Current Open Bounties...
