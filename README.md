@@ -78,9 +78,5 @@ All main demo scenes using the viking example are inside Assets > DemoVikings > 
 ---
 
 ### Bounty Board!
-Current Open Bounties...
-```diff
-When upgrading to Unity 2020.3 (LTS)
-- Assets/DemoVikings/Editor/PropertyEditor.cs(233,134): error CS0426: The type name 'DrawCapFunction' does not exist in the type 'Handles'
+Current Open Bounties... None
 
-```
