@@ -147,7 +147,7 @@ public class ThirdPersonCameraEditor : PropertyEditor
 					TargetTransform.right,
 					maxForwardAngleProperty.floatValue,
 					maxDistanceProperty.floatValue,
-					Handles.ArrowCap,
+					Handles.ArrowHandleCap,
 					20.0f * 0.005f * HandleUtility.GetHandleSize (TargetTransform.position),
 					HandleUtility.GetHandleSize (TargetTransform.position)
 				),
